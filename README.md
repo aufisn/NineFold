@@ -1,0 +1,20 @@
+# Ninefold
+
+A Sudoku game in a single HTML file. Play the classic 9×9 grid, or a 3×3×3 **Cube** mode where every one of the nine slices across all three axes must hold 1–9.
+
+## Features
+
+- **Classic 9×9** and **Cube 3×3×3** modes, four difficulty levels, unique-solution puzzles.
+- **True 3D cube**: drag to turn it freely about its core, pinch or scroll to zoom, snap buttons for each side, a **Level** button to remove tilt, and an optional lock that freezes rotation while a cell is selected. The hidden centre cell has its own **Core** tile.
+- Cube also available as **Flat** and **Stack** views.
+- **Flat net**: a read-only view of your own cube folded and unfolded in 2D. It never reveals the solution.
+- Notes, a one-button **Fill notes** toggle, hints, undo/redo, last-cell auto-fill, mistake highlighting, puzzle codes, stats, light and dark themes.
+- No dependencies and no tracking. Progress is saved in your browser's `localStorage`.
+
+## Play
+
+Open `index.html` in a browser, or use the GitHub Pages link for this repo. Fonts load from Google Fonts and fall back to system fonts offline.
+
+## Licence
+
+No licence specified yet; all rights reserved by the author until one is added.
