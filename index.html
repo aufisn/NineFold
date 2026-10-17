@@ -426,6 +426,7 @@ summary span { font-weight: 400; color: var(--ink-2); font-size: 12px; margin-le
   <header class="top">
     <div class="brand"><h1>Ninefold</h1><span class="mark" lang="ja">数独</span></div>
     <div class="icons">
+      <button class="icon-btn" data-act="sound" id="ic-sound" aria-pressed="true"></button>
       <button class="icon-btn" data-act="open" data-arg="learn" title="How to play" aria-label="How to play" id="ic-learn"></button>
       <button class="icon-btn" data-act="open" data-arg="stats" title="Statistics" aria-label="Statistics" id="ic-stats"></button>
       <button class="icon-btn" data-act="open" data-arg="settings" title="Settings" aria-label="Settings" id="ic-settings"></button>
@@ -583,6 +584,7 @@ summary span { font-weight: 400; color: var(--ink-2); font-size: 12px; margin-le
     <label class="switch"><span><b>Check entries instantly</b><small>Wrong digits turn red and count as mistakes.</small></span><input type="checkbox" id="optInstant"><span class="track"></span></label>
     <label class="switch"><span><b>Strict mode</b><small>The game ends after three mistakes. Requires instant checking.</small></span><input type="checkbox" id="optStrict"><span class="track"></span></label>
     <label class="switch"><span><b>Auto-fill the last empty cell</b><small>When a row, column, box or cube slice has one empty cell left, the game fills it. Skipped if that unit holds a wrong digit.</small></span><input type="checkbox" id="optAuto"><span class="track"></span></label>
+    <label class="switch"><span><b>Sound</b><small>A chime for a right digit, a low buzz for a wrong one. Wrong means a clash with a row, column, box or slice, or a miss while instant checking is on. With instant checking off, only clashes make a sound.</small></span><input type="checkbox" id="optSound"><span class="track"></span></label>
     <label class="switch"><span><b>Highlight related cells</b><small>Shade the row, column and box of the selected cell, and every matching digit.</small></span><input type="checkbox" id="optHighlight"><span class="track"></span></label>
   </section>
 
@@ -1569,6 +1571,8 @@ const LS = {
 };
 function svg(p, s) { s = s || 22; return '<svg viewBox="0 0 24 24" width="' + s + '" height="' + s + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>'; }
 const IC = {
+  volOn: '<path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/>',
+  volOff: '<path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/>',
   undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
   redo: '<path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',
   erase: '<path d="m7 21-4.3-4.3a1 1 0 0 1 0-1.4l9.6-9.6a1 1 0 0 1 1.4 0l5.6 5.6a1 1 0 0 1 0 1.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/>',
@@ -1616,7 +1620,7 @@ function cubePos(a, i) {
 const COLAX = [1, 0, 0], ROWAX = [2, 2, 1];
 
 const blankStats = () => ({ played: [0, 0, 0, 0, 0], won: [0, 0, 0, 0, 0], best: [null, null, null, null, null], total: [0, 0, 0, 0, 0] });
-let OPT = Object.assign({ instant: true, strict: false, highlight: true, autofill: true, view: 'cube3d' }, LS.get('ninefold:opt') || {});
+let OPT = Object.assign({ instant: true, strict: false, highlight: true, autofill: true, sound: true, view: 'cube3d' }, LS.get('ninefold:opt') || {});
 const VIEWS = ['cube3d', 'flat', 'stack'];
 if (!VIEWS.includes(OPT.view)) OPT.view = 'cube3d';
 let ST = LS.get('ninefold:stats');
@@ -1719,6 +1723,62 @@ function restoreAfterRemoval(i, a, ch) {
   }
   if (!G.vals[i]) { const S = makeState(G.vals, geo); mutate(i, 0, S.c[i], ch); }
 }
+
+/* Sound. Two synthesised cues, no audio files: a bright rising chime for a right digit and a low
+   buzz for a wrong one. A cue only plays when the game is already willing to show the verdict:
+   a digit that clashes with a row, column, box or cube slice always counts as wrong (the clash is
+   visible anyway), a digit is judged against the answer only while "Check entries instantly" is on,
+   and otherwise the move stays silent so sound never reveals what the board does not. */
+const Snd = (() => {
+  let ctx = null;
+  const log = [];
+  function ac() {
+    if (ctx) return ctx;
+    const A = window.AudioContext || window.webkitAudioContext;
+    if (!A) return null;
+    try { ctx = new A(); } catch (e) { ctx = null; }
+    return ctx;
+  }
+  function tone(c, t, f0, f1, dur, type, vol, lp) {
+    const o = c.createOscillator(), g = c.createGain(), out = lp ? c.createBiquadFilter() : null;
+    o.type = type; o.frequency.setValueAtTime(f0, t);
+    if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g);
+    if (out) { out.type = 'lowpass'; out.frequency.value = lp; g.connect(out); out.connect(c.destination); } else g.connect(c.destination);
+    o.start(t); o.stop(t + dur + 0.03);
+  }
+  function play(kind) {
+    log.push(kind);
+    if (!OPT.sound) return;
+    const c = ac();
+    if (!c) return;
+    try {
+      if (c.state === 'suspended') c.resume();
+      const t = c.currentTime + 0.01;
+      if (kind === 'good') { tone(c, t, 784, 784, 0.16, 'sine', 0.16); tone(c, t + 0.09, 1175, 1175, 0.26, 'sine', 0.14); }
+      else { tone(c, t, 170, 120, 0.3, 'sawtooth', 0.2, 700); tone(c, t, 176, 124, 0.3, 'square', 0.07, 700); }
+    } catch (e) {}
+  }
+  return { play, log, unlock() { const c = ac(); if (c && c.state === 'suspended') c.resume(); } };
+})();
+function verdictSound(i, d) {
+  if (!OPT.sound) return;
+  let clash = false;
+  for (const p of M().geo.peers[i]) if (G.vals[p] === d) { clash = true; break; }
+  if (clash || (OPT.instant && d !== G.sol[i])) Snd.play('bad');
+  else if (OPT.instant) Snd.play('good');
+}
+function renderSound() {
+  const b = $('#ic-sound');
+  if (!b) return;
+  b.innerHTML = svg(OPT.sound ? IC.volOn : IC.volOff);
+  b.setAttribute('aria-pressed', OPT.sound ? 'true' : 'false');
+  const t = OPT.sound ? 'Sound on. Tap to mute' : 'Sound off. Tap to turn on';
+  b.title = t; b.setAttribute('aria-label', t);
+}
 function enter(d) {
   if (blocked()) return;
   const i = G.sel;
@@ -1740,6 +1800,7 @@ function enter(d) {
     for (const p of M().geo.peers[i]) if (!G.vals[p] && (G.notes[p] & bit)) mutate(p, 0, G.notes[p] & ~bit, ch);
     if (OPT.instant && d !== G.sol[i]) G.mistakes++;
     placed = true;
+    verdictSound(i, d);
   }
   finishMove(ch, placed);
 }
@@ -2058,6 +2119,7 @@ function renderStats() {
 function syncSettings() {
   $('#optInstant').checked = OPT.instant; $('#optInstant').disabled = OPT.strict;
   $('#optStrict').checked = OPT.strict; $('#optHighlight').checked = OPT.highlight; $('#optAuto').checked = OPT.autofill;
+  $('#optSound').checked = OPT.sound; renderSound();
 }
 
 /* Starting games */
@@ -2092,6 +2154,7 @@ const ACT = {
   resume: () => { G.paused = false; render(); },
   hintnext: () => advanceHint(),
   hintx: () => { G.hint = null; render(); },
+  sound: () => { OPT.sound = !OPT.sound; LS.set('ninefold:opt', OPT); syncSettings(); if (OPT.sound) Snd.play('good'); },
   mode: a => { newMode = a; renderNewSheet(); },
   level: a => startNew(+a, null, newMode),
   axis: a => setAxis(+a),
@@ -2129,7 +2192,7 @@ const ACT = {
 };
 
 function buildStatic() {
-  $('#ic-learn').innerHTML = svg(IC.learn); $('#ic-stats').innerHTML = svg(IC.stats); $('#ic-settings').innerHTML = svg(IC.settings);
+  $('#ic-learn').innerHTML = svg(IC.learn); $('#ic-stats').innerHTML = svg(IC.stats); $('#ic-settings').innerHTML = svg(IC.settings); renderSound();
   $('#tools').innerHTML = TOOLS.map(t => '<button class="tool" id="t-' + t[0] + '" data-act="tool" data-arg="' + t[0] + '" title="' + t[3] + '" aria-label="' + t[3] + '">' + svg(t[2]) + '<span>' + t[1] + '</span></button>').join('');
   $('#pad').innerHTML = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => '<button class="key" data-act="digit" data-arg="' + d + '" data-d="' + d + '" aria-label="Digit ' + d + '">' + d + '<small></small></button>').join('');
   $('#viewSeg').innerHTML = [['cube3d', '3D cube'], ['flat', 'Flat'], ['stack', 'Stack']].map(v => '<button data-act="view" data-arg="' + v[0] + '" aria-pressed="false">' + v[1] + '</button>').join('');
@@ -2194,6 +2257,7 @@ document.addEventListener('keydown', e => {
   else if (k === 'h' || k === 'H') doHint();
   else if (k === 'z' || k === 'Z') undo();
   else if (k === 'y' || k === 'Y') redo();
+  else if (k === 'm' || k === 'M') ACT.sound();
   else if (k === 'p' || k === 'P') ACT.pause();
   else if (k === ' ' && G.hint) { e.preventDefault(); advanceHint(); }
 });
@@ -2203,6 +2267,7 @@ function bindOpt(id, key, after) {
 bindOpt('#optInstant', 'instant');
 bindOpt('#optStrict', 'strict', () => { if (OPT.strict) OPT.instant = true; });
 bindOpt('#optHighlight', 'highlight');
+bindOpt('#optSound', 'sound', () => { if (OPT.sound) Snd.play('good'); });
 bindOpt('#optAuto', 'autofill', () => {
   if (!OPT.autofill || !G || G.done || G.over) return;
   const ch = [], fl = [];
