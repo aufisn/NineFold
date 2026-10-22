@@ -81,6 +81,9 @@ h1, h2, h3, p { margin: 0; }
 .icons { display: flex; gap: 4px; }
 .icon-btn { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 10px; color: var(--ink-2); }
 .icon-btn:hover { background: var(--peer); color: var(--ink); }
+.icon-btn.newbtn { color: var(--accent); }
+@media (max-width: 380px) { .brand .mark { display: none; } }
+.icon-btn.newbtn svg { stroke-width: 2.1; }
 
 /* Layout */
 .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; max-width: 600px; margin: 0 auto; }
@@ -103,7 +106,7 @@ h1, h2, h3, p { margin: 0; }
 .board {
   display: grid; grid-template-columns: repeat(9, 1fr); grid-template-rows: repeat(9, 1fr);
   aspect-ratio: 1; width: 100%; max-width: 100%;
-  background: var(--sheet); border: 2px solid var(--rule-strong); border-radius: 6px; overflow: hidden;
+  background: var(--sheet); border: 2px solid var(--rule-strong); border-radius: 6px; overflow: visible;
   container-type: inline-size; outline: none; user-select: none; -webkit-user-select: none; touch-action: manipulation;
   box-shadow: 0 18px 36px -26px rgba(10, 20, 40, .55);
 }
@@ -136,6 +139,16 @@ h1, h2, h3, p { margin: 0; }
 .notes i.m { color: var(--accent); font-weight: 800; }
 .board.won .cell { animation: glow 900ms ease both; animation-delay: var(--d); }
 @keyframes pulse { 50% { box-shadow: inset 0 0 0 3px var(--hint-ring), inset 0 0 0 99px rgba(183, 121, 31, .16); } }
+@keyframes peerpulse { 0% { box-shadow: inset 0 0 0 99px color-mix(in srgb, var(--accent) 38%, transparent); } 100% { box-shadow: inset 0 0 0 99px transparent; } }
+@keyframes isopulse { 0% { opacity: .35; } 100% { opacity: 1; } }
+.cell.ctl { border-top-left-radius: 4px; } .cell.ctr { border-top-right-radius: 4px; } .cell.cbl { border-bottom-left-radius: 4px; } .cell.cbr { border-bottom-right-radius: 4px; }
+.cell.sel.up { z-index: 3; transform: scale(1.1); border-color: transparent; border-radius: 4px; box-shadow: inset 0 0 0 2px var(--accent), 0 4px 12px rgba(0, 0, 0, .3); }
+.cell.sel.up.gr { animation: lift 190ms cubic-bezier(.2, .8, .2, 1); }
+@keyframes lift { from { transform: scale(1); box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 rgba(0, 0, 0, 0); } }
+.iso .ic.sel.up { transform-box: fill-box; transform-origin: center; transform: scale(1.14); filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .35)); }
+@media (prefers-reduced-motion: reduce) { .cell.sel.up.gr { animation: none; } }
+.cell.pp { animation: peerpulse 650ms ease-out; }
+.iso .ic.pp { animation: isopulse 650ms ease-out; }
 @keyframes glow { 0% { background: transparent; } 40% { background: var(--sel); } 100% { background: transparent; } }
 
 .veil {
@@ -504,6 +517,7 @@ summary span { font-weight: 400; color: var(--ink-2); font-size: 12px; margin-le
   <header class="top">
     <div class="brand"><h1>Ninefold</h1><span class="mark" lang="ja">数独</span></div>
     <div class="icons">
+      <button class="icon-btn newbtn" data-act="open" data-arg="new" title="New game" aria-label="New game" id="ic-new"></button>
       <button class="icon-btn" data-act="sound" id="ic-sound" aria-pressed="true"></button>
       <button class="icon-btn" data-act="open" data-arg="learn" title="How to play" aria-label="How to play" id="ic-learn"></button>
       <button class="icon-btn" data-act="open" data-arg="stats" title="Statistics" aria-label="Statistics" id="ic-stats"></button>
@@ -560,7 +574,6 @@ summary span { font-weight: 400; color: var(--ink-2); font-size: 12px; margin-le
       <div class="coach" id="coach" aria-live="polite"></div>
       <div class="tools" id="tools"></div>
       <div class="pad" id="pad"></div>
-      <button class="btn wide quiet" data-act="open" data-arg="new">New game</button>
     </aside>
   </main>
 </div>
@@ -683,6 +696,7 @@ summary span { font-weight: 400; color: var(--ink-2); font-size: 12px; margin-le
     <label class="switch"><span><b>Auto-fill the last empty cell</b><small>When a row, column, box or cube slice has one empty cell left, the game fills it. Skipped if that unit holds a wrong digit.</small></span><input type="checkbox" id="optAuto"><span class="track"></span></label>
     <label class="switch"><span><b>Sound</b><small>A chime for a right digit, a low buzz for a wrong one. Wrong means a clash with a row, column, box or slice, or a miss while instant checking is on. With instant checking off, only clashes make a sound.</small></span><input type="checkbox" id="optSound"><span class="track"></span></label>
     <label class="switch"><span><b>Keep cube digits upright</b><small>In the 3D cube, digits and notes turn in quarter steps so they always read the right way up, whichever way you turn the cube. Level also stands the cube itself upright.</small></span><input type="checkbox" id="optUpright"><span class="track"></span></label>
+    <label class="switch"><span><b>Raise the selected cell</b><small>The selected cell lifts slightly off the board, and on the 3D cube its visible faces grow outward, so you can find it at a glance.</small></span><input type="checkbox" id="optGrow"><span class="track"></span></label>
     <label class="switch"><span><b>Highlight related cells</b><small>Shade the row, column and box of the selected cell, and every matching digit.</small></span><input type="checkbox" id="optHighlight"><span class="track"></span></label>
   </section>
 
@@ -1339,6 +1353,9 @@ const C3 = (() => {
   function draw() {
     if (!ctx || !G || W < 10 || !ensure()) return;
     const T = theme(), cam = camera(), h = cam.U * HALF;
+    const gt = GROW_T0 ? Math.min(1, (performance.now() - GROW_T0) / 190) : 1, gg = 1 + 0.15 * (1 - Math.pow(1 - gt, 3));
+    const growOn = !peel && !(typeof OPT !== 'undefined' && OPT.grow === false);
+    const pt = PULSE_T0 ? (performance.now() - PULSE_T0) / 650 : 2, pa = pt < 1 ? 0.8 * (1 - pt) * (1 - pt) : 0;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, Hh);
     hits = [];
@@ -1356,15 +1373,26 @@ const C3 = (() => {
       const i = e.i, f = e.f;
       {
         if (!facing(R, f)) continue;
-        const pc = proj(R, cam, f.fc);
-        const du = proj(R, cam, [f.fc[0] + f.ta[0] * HALF, f.fc[1] + f.ta[1] * HALF, f.fc[2] + f.ta[2] * HALF]);
-        const dv = proj(R, cam, [f.fc[0] + f.tb[0] * HALF, f.fc[1] + f.tb[1] * HALF, f.fc[2] + f.tb[2] * HALF]);
-        let ux = du[0] - pc[0], uy = du[1] - pc[1];
-        const vx = dv[0] - pc[0], vy = dv[1] - pc[1];
-        const flip = ux * vy - uy * vx < 0 ? -1 : 1;
-        ux *= flip; uy *= flip;
-        const quad = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(s => [pc[0] + ux * s[0] + vx * s[1], pc[1] + uy * s[0] + vy * s[1]]);
-        items.push({ i, z: pc[2], nz: ap(R, f.n), quad, pc, ux, uy, vx, vy, core: e.core });
+        /* geometry of one face; the selected cell is built grown about its own centre so all its visible faces swell together */
+        const geom = ff => {
+          const pc = proj(R, cam, ff.fc);
+          const du = proj(R, cam, [ff.fc[0] + ff.ta[0] * HALF, ff.fc[1] + ff.ta[1] * HALF, ff.fc[2] + ff.ta[2] * HALF]);
+          const dv = proj(R, cam, [ff.fc[0] + ff.tb[0] * HALF, ff.fc[1] + ff.tb[1] * HALF, ff.fc[2] + ff.tb[2] * HALF]);
+          let ux = du[0] - pc[0], uy = du[1] - pc[1];
+          const vx = dv[0] - pc[0], vy = dv[1] - pc[1];
+          const flip = ux * vy - uy * vx < 0 ? -1 : 1;
+          ux *= flip; uy *= flip;
+          const quad = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(s => [pc[0] + ux * s[0] + vx * s[1], pc[1] + uy * s[0] + vy * s[1]]);
+          return { pc, ux, uy, vx, vy, quad };
+        };
+        const lift = growOn && i === G.sel && !e.core;
+        const base = geom(f);
+        let gm = base;
+        if (lift) {
+          const k = 0.5 * (gg - 1);
+          gm = geom({ n: f.n, fc: [f.fc[0] + f.n[0] * k, f.fc[1] + f.n[1] * k, f.fc[2] + f.n[2] * k], ta: f.ta.map(v => v * gg), tb: f.tb.map(v => v * gg) });
+        }
+        items.push({ i, z: base.pc[2] + (lift ? 20 : 0), nz: ap(R, f.n), quad: gm.quad, hq: lift ? base.quad : null, lift, pc: gm.pc, ux: gm.ux, uy: gm.uy, vx: gm.vx, vy: gm.vy, core: e.core });
       }
     }
     items.sort((a, b) => a.z - b.z);
@@ -1387,9 +1415,10 @@ const C3 = (() => {
         const gf = cls.has('bad') ? T.errBg : cls.has('sel') ? T.sel : cls.has('same') ? T.same : cls.has('peer') ? T.peer : null;
         pathPoly(it.quad);
         ctx.globalAlpha = gf ? 0.6 : 0.1; ctx.fillStyle = gf || T.ink2; ctx.fill();
+        if (pa > 0 && cls.has('peer')) { ctx.globalAlpha = pa; ctx.fillStyle = T.sel; ctx.fill(); }
         ctx.globalAlpha = 0.4; ctx.lineWidth = 1; ctx.strokeStyle = T.ink2; ctx.stroke();
         if (cls.has('sel')) { ctx.globalAlpha = 1; ctx.lineWidth = 3; ctx.strokeStyle = T.accent; ctx.stroke(); }
-        hits.push({ i, quad: it.quad });
+        hits.push({ i, quad: it.hq || it.quad });
         const gv = G.vals[i];
         if (gv) {
           ctx.save();
@@ -1415,16 +1444,18 @@ const C3 = (() => {
       else if (cls.has('region')) fill = T.hintBg;
       else if (cls.has('same')) fill = T.same;
       else if (cls.has('peer')) fill = T.peer;
+      if (it.lift) { ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 14 * dpr; ctx.shadowOffsetY = 3 * dpr; pathPoly(it.quad); ctx.fillStyle = T.sheet; ctx.fill(); ctx.restore(); }
       pathPoly(it.quad);
       ctx.fillStyle = T.sheet; ctx.fill();
       if (fill !== T.sheet) { ctx.fillStyle = fill; ctx.fill(); }
+      if (pa > 0 && cls.has('peer')) { ctx.globalAlpha = pa; ctx.fillStyle = T.sel; ctx.fill(); ctx.globalAlpha = 1; }
       /* soft light from above-left-front so the sides read as separate planes */
       const lit = Math.max(0, Math.min(1, -it.nz[0] * 0.25 - it.nz[1] * 0.6 + it.nz[2] * 0.75));
       ctx.fillStyle = 'rgba(10,20,40,' + (0.17 * (1 - lit)).toFixed(3) + ')'; ctx.fill();
       ctx.lineWidth = 1; ctx.strokeStyle = T.strong; ctx.stroke();
       if (cls.has('sel')) { ctx.lineWidth = 3.5; ctx.strokeStyle = T.accent; ctx.stroke(); }
       else if (cls.has('target')) { ctx.lineWidth = 3.5; ctx.strokeStyle = T.ring; ctx.stroke(); }
-      hits.push({ i, quad: it.quad });
+      hits.push({ i, quad: it.hq || it.quad });
       /* digit or notes, drawn in the sticker's own plane */
       const v = G.vals[i], n = noteAt(i);
       if (v || n) {
@@ -1480,6 +1511,7 @@ const C3 = (() => {
       ctx.fillText(a[0], ox + v[0] * (L + 8), oy + v[1] * (L + 8));
     }
     ctx.globalAlpha = 1;
+    if (pa > 0 || gt < 1) request();
   }
 
   function inQuad(q, x, y) {
@@ -2282,6 +2314,8 @@ function conflicts() {
   for (let i = 0; i < n; i++) { const v = G.vals[i]; if (!v) continue; for (const p of peers[i]) if (G.vals[p] === v) { bad[i] = 1; break; } }
   return bad;
 }
+let PULSE_T0 = 0, GROW_T0 = 0, pulseSel = -2;
+const prefersReduced = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
 function render() {
   if (!G) return;
   const cube = isCube(G.mode), geo = M().geo, N = M().N, D9 = M().D, v3 = cube && G.view === 'cube3d';
@@ -2291,15 +2325,17 @@ function render() {
   const sv = arm || (G.sel >= 0 ? G.vals[G.sel] : 0), bad = conflicts(), h = hintView();
   const reg = h && h.region ? new Set(h.region) : null;
   const peerSet = G.sel >= 0 && OPT.highlight ? new Set(geo.peers[G.sel]) : null;
+  if (G.sel !== pulseSel) { pulseSel = G.sel; GROW_T0 = G.sel >= 0 && !prefersReduced() ? performance.now() : 0; PULSE_T0 = peerSet && !prefersReduced() ? performance.now() : 0; }
+  const pulsing = peerSet && PULSE_T0 && performance.now() - PULSE_T0 < 650;
   const flash = G.flash ? new Set(G.flash) : null;
   const extras = i => {
     const v = G.vals[i], given = G.givens[i] !== 0;
     let cls = '';
     if (given) cls += ' given';
-    if ((peerSet || arm) && i !== G.sel) { if (peerSet && peerSet.has(i)) cls += ' peer'; if (sv && v === sv) cls += ' same'; }
+    if ((peerSet || arm) && i !== G.sel) { if (peerSet && peerSet.has(i)) cls += pulsing ? ' peer pp' : ' peer'; if (sv && v === sv) cls += ' same'; }
     if (reg && reg.has(i)) cls += ' region';
     if (h && h.target === i) cls += ' target';
-    if (i === G.sel) cls += ' sel';
+    if (i === G.sel) cls += ' sel' + (OPT.grow !== false ? ' up' + (GROW_T0 && performance.now() - GROW_T0 < 230 ? ' gr' : '') : '');
     if (!given && v && (bad[i] || (OPT.instant && v !== G.sol[i]))) cls += ' bad';
     if (flash && flash.has(i)) cls += ' auto';
     return cls;
@@ -2314,6 +2350,7 @@ function render() {
     let cls = 'cell';
     if (!cube) { if (c === 2 || c === 5) cls += ' bx'; if (r === 2 || r === 5) cls += ' by'; }
     cls += extras(i);
+    { const side = cube ? N : 9; if (r === 0 && c === 0) cls += ' ctl'; if (r === 0 && c === side - 1) cls += ' ctr'; if (r === side - 1 && c === 0) cls += ' cbl'; if (r === side - 1 && c === side - 1) cls += ' cbr'; }
     let inner = '';
     if (v) inner = v;
     else if (noteAt(i)) {
@@ -2544,7 +2581,7 @@ function renderStats() {
 }
 function syncSettings() {
   $('#optInstant').checked = OPT.instant; $('#optInstant').disabled = OPT.strict;
-  $('#optStrict').checked = OPT.strict; $('#optHighlight').checked = OPT.highlight; $('#optAuto').checked = OPT.autofill; $('#optUpright').checked = OPT.upright !== false;
+  $('#optStrict').checked = OPT.strict; $('#optHighlight').checked = OPT.highlight; $('#optAuto').checked = OPT.autofill; $('#optUpright').checked = OPT.upright !== false; $('#optGrow').checked = OPT.grow !== false;
   $('#optSound').checked = OPT.sound; renderSound();
 }
 
@@ -2642,7 +2679,7 @@ function buildPad() {
   pad.innerHTML = Array.from({ length: D }, (_, k) => k + 1).map(d => '<button class="key" data-act="digit" data-arg="' + d + '" data-d="' + d + '" aria-label="Digit ' + d + '">' + d + '<small></small></button>').join('');
 }
 function buildStatic() {
-  $('#ic-learn').innerHTML = svg(IC.learn); $('#ic-stats').innerHTML = svg(IC.stats); $('#ic-settings').innerHTML = svg(IC.settings); renderSound();
+  $('#ic-new').innerHTML = svg('<rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M12 8v8M8 12h8"/>'); $('#ic-learn').innerHTML = svg(IC.learn); $('#ic-stats').innerHTML = svg(IC.stats); $('#ic-settings').innerHTML = svg(IC.settings); renderSound();
   $('#tools').innerHTML = TOOLS.map(t => '<button class="tool" id="t-' + t[0] + '" data-act="tool" data-arg="' + t[0] + '" title="' + t[3] + '" aria-label="' + t[3] + '">' + svg(t[2] || penIcon('')) + '<span>' + t[1] + '</span>' + (t[0] === 'auto' ? '<small class="cnt" id="fillCnt"></small><i class="bar"></i>' : '') + '</button>').join('');
   buildPad();
   {
@@ -2767,6 +2804,7 @@ function bindOpt(id, key, after) {
 }
 bindOpt('#optInstant', 'instant');
 bindOpt('#optUpright', 'upright', () => render());
+bindOpt('#optGrow', 'grow', () => render());
 bindOpt('#optStrict', 'strict', () => { if (OPT.strict) OPT.instant = true; });
 bindOpt('#optHighlight', 'highlight');
 bindOpt('#optSound', 'sound', () => { if (OPT.sound) Snd.play('good'); });
