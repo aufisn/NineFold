@@ -691,7 +691,7 @@ summary span { font-weight: 400; color: var(--ink-2); font-size: 12px; margin-le
     <h3>Marking digits</h3>
     <p>When you are hunting for the missing digit in a slice, <b>hold the Notes button</b> (or press K) to switch to Mark. The button turns into Mark, and each digit you tap on the pad turns amber and struck through instead of being placed, so the plain keys left are the ones that can still go there. Tap a crossed digit to uncross it. Tap the Mark button once to finish: all the marks clear and the pad is back to normal. Marks are scratch work, are never saved, and never touch your notes. If Notes was on, it is still on when you finish marking.</p>
     <h3>Why?</h3>
-    <p>Select a cell and tap <b>Why?</b> in the Tip box, press W, or press and hold a cell (right-click on a computer). On a cell you have filled, it shows why that digit belongs there, one short step at a time. On an empty cell, choose a digit and it shows why that digit cannot go there; this counts as a hint. The shaded cells are the evidence for the step on screen. Every step uses the same patterns as the Hint button and works only from what is on the board. When no standard pattern explains the answer, it says so rather than guessing.</p>
+    <p>Select a cell and tap <b>Why?</b> in the Tip box, press W, or right-click a cell on a computer. On a cell you have filled, it shows why that digit belongs there, one short step at a time. On an empty cell, choose a digit and it shows why that digit cannot go there; this counts as a hint. The shaded cells are the evidence for the step on screen. Every step uses the same patterns as the Hint button and works only from what is on the board. When no standard pattern explains the answer, it says so rather than guessing.</p>
     <h3>Branching: try an idea, then keep it or throw it away</h3>
     <p>A branch lets you make a guess and play it out without risking your board. Think of it as saving a copy of the puzzle before you experiment.</p>
     <p><b>Start.</b> Tap <b>Branch</b> in the Tip box under the board (or press B). If the Tip box is showing a message, wait a moment or tap an empty spot and the button returns. A dashed bar appears above the board showing how many moves you have made since you branched.</p>
@@ -1851,7 +1851,7 @@ const C3 = (() => {
     cv.addEventListener('contextmenu', e => {
       e.preventDefault();
       const r = cv.getBoundingClientRect(), i = hitAt(e.clientX - r.left, e.clientY - r.top);
-      if (gest) { clearTimeout(gest.lp); gest.fired = true; }
+      if (e.pointerType && e.pointerType !== 'mouse') return;
       if (i >= 0 && G && !G.paused) { G.sel = i; lastSel = i; startWhy(i); }
     });
     cv.addEventListener('pointerdown', e => {
@@ -1859,10 +1859,8 @@ const C3 = (() => {
       try { cv.setPointerCapture(e.pointerId); } catch (_) {}
       const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
       ptrs.set(e.pointerId, { x, y });
-      if (ptrs.size === 1) { gest = { x0: x, y0: y, lx: x, ly: y, t0: performance.now(), moved: false, target: hitAt(x, y) }; gest.rad = grabRadius(gest.target);
-        if (gest.target >= 0 && !(OPT.digitFirst && G.armed) && e.pointerType !== 'mouse') { const tg = gest.target, g0 = gest; gest.lp = setTimeout(() => { if (gest === g0 && !g0.moved && G && !G.paused) { g0.fired = true; G.sel = tg; lastSel = tg; startWhy(tg); } }, 520); } }
+      if (ptrs.size === 1) { gest = { x0: x, y0: y, lx: x, ly: y, t0: performance.now(), moved: false, target: hitAt(x, y) }; gest.rad = grabRadius(gest.target); }
       else if (ptrs.size === 2) {
-        if (gest) clearTimeout(gest.lp);
         gest = null;
         const [a, b] = [...ptrs.values()];
         pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: zoom };
@@ -1879,7 +1877,7 @@ const C3 = (() => {
         return;
       }
       if (!gest) return;
-      if (!gest.moved && Math.hypot(x - gest.x0, y - gest.y0) > (gest.target >= 0 ? 16 : 8)) { gest.moved = true; clearTimeout(gest.lp); gest.lx = gest.x0; gest.ly = gest.y0; }
+      if (!gest.moved && Math.hypot(x - gest.x0, y - gest.y0) > (gest.target >= 0 ? 16 : 8)) { gest.moved = true; gest.lx = gest.x0; gest.ly = gest.y0; }
       const dx = x - gest.lx, dy = y - gest.ly;
       if (gest.moved) {
         if (isLocked() || dead()) nudge();
@@ -1893,8 +1891,7 @@ const C3 = (() => {
       ptrs.delete(e.pointerId);
       if (ptrs.size < 2) pinch = null;
       if (spin) { spin = false; request(); }
-      if (gest) clearTimeout(gest.lp);
-      if (gest && ptrs.size === 0 && e.type === 'pointerup' && !gest.moved && !gest.fired && performance.now() - gest.t0 < 700) tap(x, y);
+      if (gest && ptrs.size === 0 && e.type === 'pointerup' && !gest.moved && performance.now() - gest.t0 < 700) tap(x, y);
       if (ptrs.size === 0) gest = null;
     };
     cv.addEventListener('pointerup', end);
@@ -2643,7 +2640,7 @@ function whyView() {
   const label = (R.kind === 'cell' ? cName(R.cell) + ' is ' + R.digit : R.digit + ' not in ' + cName(R.cell)) + (n > 1 ? ' · step ' + (k + 1) + ' of ' + n : '');
   const btns = [];
   if (k > 0) btns.push(['whyprev', 'Back', 0]);
-  if (!last) btns.push(['whynext', 'Next', 1]);
+  if (!last) btns.push(['whynext', 'Next', 1], ['whyx', 'Done', 0]);
   else { if (R.kind === 'elim') btns.push(['why', 'Another digit', 0]); btns.push(['whyx', 'Done', 1]); }
   return { label, text, region: Array.from(new Set(s.cells.concat(s.base))), target: R.cell, btns };
 }
@@ -3164,21 +3161,9 @@ $('#nav').addEventListener('click', e => {
 });
 $('#board').addEventListener('pointerdown', pickCell);
 $('#c3in').addEventListener('pointerdown', pickCell);
-/* Why?: press and hold a cell (or right-click it) */
-let whyT = 0, whyAt = null;
-const whyStop = () => { clearTimeout(whyT); whyT = 0; };
-const whyArm = e => {
-  const c = e.target.closest('[data-i]');
-  whyStop();
-  if (!c || !G || G.paused || (OPT.digitFirst && G.armed) || (e.pointerType === 'mouse' && e.button !== 0)) return;
-  const i = +c.dataset.i; whyAt = { x: e.clientX, y: e.clientY };
-  whyT = setTimeout(() => { whyT = 0; startWhy(i); }, 520);
-};
+/* Why?: right-click a cell with a mouse. Touch has no hold shortcut (it fired by accident); use the Why? button. */
 for (const el of [$('#board'), $('#c3in')]) {
-  el.addEventListener('pointerdown', whyArm);
-  el.addEventListener('pointermove', e => { if (whyT && whyAt && Math.hypot(e.clientX - whyAt.x, e.clientY - whyAt.y) > 10) whyStop(); });
-  for (const t of ['pointerup', 'pointercancel', 'pointerleave']) el.addEventListener(t, whyStop);
-  el.addEventListener('contextmenu', e => { const c = e.target.closest('[data-i]'); if (!c || !G) return; e.preventDefault(); whyStop(); startWhy(+c.dataset.i); });
+  el.addEventListener('contextmenu', e => { const c = e.target.closest('[data-i]'); if (!c || !G) return; e.preventDefault(); if (e.pointerType && e.pointerType !== 'mouse') return; startWhy(+c.dataset.i); });
 }
 /* Digits above 9 are typed as two keys: 1 then 0 to 6 gives 10 to 16. A lone 1 is entered after a short pause. */
 let digBuf = '', digT = 0;
