@@ -167,6 +167,17 @@ h1, h2, h3, p { margin: 0; }
 .coach.hinting { border-color: var(--hint-ring); background: var(--hint-bg); }
 .coach .lbl { font-weight: 700; font-size: 11px; line-height: 1; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-2); }
 .coach.hinting .lbl { color: var(--hint-ring); }
+.coach.whying { border-color: var(--accent); background: var(--peer); }
+.coach.whying .lbl { color: var(--accent); }
+.btn.sm { min-height: 36px; padding: 0 14px; }
+.btn.sm svg { margin-right: 6px; vertical-align: -3px; }
+.branchbar { display: flex; align-items: center; gap: 10px; margin: -2px 0 10px; padding: 6px 6px 6px 12px; border: 1.5px dashed var(--accent); border-radius: 12px; background: color-mix(in srgb, var(--accent) 8%, var(--sheet)); }
+.branchbar[hidden] { display: none; }
+.branchbar .br-t { flex: 1; min-width: 0; font-weight: 600; font-size: 14px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
+.branchbar .br-t svg { color: var(--accent); flex: none; }
+.branchbar .br-a { display: flex; gap: 6px; flex: none; }
+.cell.br { outline: 1.5px dashed color-mix(in srgb, var(--accent) 75%, transparent); outline-offset: -4px; }
+.iso .ic.br polygon { stroke: var(--accent); stroke-dasharray: 3 2; }
 .acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 16px;
@@ -230,6 +241,28 @@ h1, h2, h3, p { margin: 0; }
   position: relative; aspect-ratio: 1; width: 100%; max-width: 560px; margin: 0 auto; overflow: hidden;
   background: var(--sheet); border: 2px solid var(--rule-strong); border-radius: 6px; box-shadow: 0 18px 36px -26px rgba(10, 20, 40, .55);
 }
+.nav { position: absolute; left: 8px; top: 8px; z-index: 3; padding: 4px; border: 1px solid var(--rule-strong); border-radius: 10px; background: color-mix(in srgb, var(--sheet) 94%, transparent); box-shadow: 0 6px 14px -10px rgba(10, 20, 40, .5); max-width: 124px; }
+.nav[hidden] { display: none; }
+.nav.shut { left: 0; top: 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.nav-tri { display: block; width: 40px; height: 40px; padding: 0; border: 0; background: none; cursor: pointer; position: relative; }
+.nav-tri::before { content: ''; position: absolute; left: 0; top: 0; width: 30px; height: 30px; background: var(--accent); clip-path: polygon(0 0, 100% 0, 0 100%); }
+@media (hover: hover) and (pointer: fine) { .nav-tri:hover::before { filter: brightness(1.12); } }
+.nav-h { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-bottom: 3px; }
+.nav-t { font: 700 9px/1 var(--body, inherit); letter-spacing: .06em; color: var(--ink-2); white-space: nowrap; }
+.nav-x { width: 16px; height: 16px; display: grid; place-items: center; border-radius: 8px; color: var(--ink-2); font-size: 13px; line-height: 1; }
+.nav-b { display: flex; gap: 3px; }
+.nav-l { --nc: 10px; display: grid; grid-template-columns: repeat(var(--n), var(--nc)); gap: 1px; padding: 1px; border-radius: 4px; }
+.nav-l[style*="--n:4"] { --nc: 5.6px; }
+.nav-l.on { box-shadow: 0 0 0 1.5px var(--accent); }
+.nav-c { width: var(--nc); height: var(--nc); padding: 0; border: 0; background: var(--peer); border-radius: 1px; position: relative; cursor: pointer; }
+.nav-c.core { border-radius: 50%; }
+.nav-c.g { background: var(--ink-2); }
+.nav-c.f { background: var(--accent); opacity: .75; }
+.nav-c.cl { box-shadow: inset 0 0 0 1.2px var(--accent); }
+.nav-c.sm { box-shadow: 0 0 0 1px var(--ink); }
+.nav-c.ok::after { content: ''; position: absolute; inset: 30%; border-radius: 50%; background: var(--accent); opacity: .65; }
+.nav-c.cs { background: var(--accent); opacity: 1; box-shadow: 0 0 0 1.5px var(--ink); z-index: 1; }
+@media (hover: hover) and (pointer: fine) { .nav-c:hover, .nav-x:hover { box-shadow: 0 0 0 1.2px var(--ink-2); } }
 #c3 { display: block; width: 100%; height: 100%; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
 #c3.locked { cursor: default; }
 #c3:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
@@ -534,6 +567,7 @@ summary span { font-weight: 400; color: var(--ink-2); font-size: 12px; margin-le
         <div class="clock"><span id="timer">0:00</span><button class="icon-btn" id="pauseBtn" data-act="pause" aria-label="Pause"></button></div>
         <div class="mistakes" id="mistakes"></div>
       </div>
+      <div class="branchbar" id="branchbar" role="group" aria-label="Branch" hidden><span class="br-t"><span id="brIcon" aria-hidden="true"></span><span id="brInfo" aria-live="polite"></span></span><span class="br-a"><button class="btn sm" data-act="brabandon" aria-label="Abandon the branch and restore the board">Abandon</button><button class="btn sm pri" data-act="brcommit" aria-label="Commit the branch and keep everything">Commit</button></span></div>
       <div class="cubebar" id="cubebar" hidden>
         <div class="cb-grp" id="axisGrp"><span class="cb-l">Slice by</span><div class="seg sm" id="axisSeg"></div></div>
         <div class="cb-grp"><span class="cb-l">View</span><div class="seg sm" id="viewSeg"></div></div>
@@ -549,6 +583,7 @@ summary span { font-weight: 400; color: var(--ink-2); font-size: 12px; margin-le
             <button class="c3-arrow down" data-dir="down" aria-label="Turn the cube down" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
             <button class="c3-arrow left" data-dir="left" aria-label="Turn the cube left" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
             <button class="c3-arrow right" data-dir="right" aria-label="Turn the cube right" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+            <div class="nav" id="nav" role="group" aria-label="Cube navigator" hidden></div>
             <button class="c3-lock" id="c3lock" data-act="lock" aria-pressed="false" disabled></button>
             <button class="c3-level" id="c3level" data-act="level3d" title="Stand the cube upright again">Level</button>
             <button class="c3-level c3-inner" id="c3inner" data-act="inner3d" aria-pressed="false" hidden>Peel</button>
@@ -655,6 +690,12 @@ summary span { font-weight: 400; color: var(--ink-2); font-size: 12px; margin-le
     <p>Turn on <b>Digit first</b> (next to Notes) to enter digits the other way round. Tap a digit on the pad to arm it, then tap squares to place it; every copy of that digit is highlighted on the board, so you can sweep for where it still fits. Tap the digit again, or press Esc, to put it down. With Notes on, tapping squares pencils the armed digit in instead. A dragged cube never places a digit, only a clean tap does. The D key switches the mode on and off.</p>
     <h3>Marking digits</h3>
     <p>When you are hunting for the missing digit in a slice, <b>hold the Notes button</b> (or press K) to switch to Mark. The button turns into Mark, and each digit you tap on the pad turns amber and struck through instead of being placed, so the plain keys left are the ones that can still go there. Tap a crossed digit to uncross it. Tap the Mark button once to finish: all the marks clear and the pad is back to normal. Marks are scratch work, are never saved, and never touch your notes. If Notes was on, it is still on when you finish marking.</p>
+    <h3>Why?</h3>
+    <p>Select a cell and tap <b>Why?</b> in the Tip box, press W, or press and hold a cell (right-click on a computer). On a cell you have filled, it shows why that digit belongs there, one short step at a time. On an empty cell, choose a digit and it shows why that digit cannot go there; this counts as a hint. The shaded cells are the evidence for the step on screen. Every step uses the same patterns as the Hint button and works only from what is on the board. When no standard pattern explains the answer, it says so rather than guessing.</p>
+    <h3>Branching</h3>
+    <p>To try an idea without risking the board, tap <b>Branch</b> in the Tip box (or press B). A dashed bar shows how many moves you have made since the fork, and digits you place inside it get a dashed outline. <b>Commit</b> keeps everything and ends the branch. <b>Abandon</b> puts the board and your notes back exactly as they were at the fork. You can branch again inside a branch, and Commit folds the inner one into the outer one. You cannot undo past the fork; Abandon instead. Mistakes and hints used inside a branch still count, and in strict mode three mistakes still end the game. Auto-fill will not fill a cell that was already waiting at the fork. Solving the puzzle inside a branch simply finishes the game.</p>
+    <h3>Cube navigator</h3>
+    <p>In Settings, switch on <b>Cube navigator</b> to dock a small map in the top-left corner of the 3D cube. It lays the layers side by side, outlines the layer holding your selected cell, rings the cells in line with it, shows its X, Y and Z position, and draws cells hidden inside the cube as circles, so a selected core cell is never lost. With Digit first, small dots show where the armed digit can still go. Tap a square on the map to select it (it never places a digit), and tap &times; to fold it into a small blue triangle in the corner; tap the triangle to open it again. It stays switched on in Settings until you turn it off there.</p>
     <h3>Last-cell auto-fill</h3>
     <p>When a row, column, box or cube slice has a single empty cell left, the game fills it for you, and keeps going if that completes another unit. It only fills a digit that is correct, so a unit containing a wrong entry stays untouched. Switch it off in Settings.</p>
     <h3>How difficulty is set</h3>
@@ -679,7 +720,7 @@ summary span { font-weight: 400; color: var(--ink-2); font-size: 12px; margin-le
       </tbody>
     </table></div>
     <h3>Keyboard</h3>
-    <p class="muted">1&ndash;9 enter a digit. Arrow keys move. Backspace erases. N toggles notes. H gives a hint. Z undoes and Y redoes. P pauses. In cube mode, [ and ] move between layers, and X, Y or Z choose the slicing axis.</p>
+    <p class="muted">1&ndash;9 enter a digit. Arrow keys move. Backspace erases. N toggles notes. H gives a hint. W asks Why? about the selected cell. B starts a branch. Z undoes and Y redoes. P pauses. In cube mode, [ and ] move between layers, and X, Y or Z choose the slicing axis.</p>
   </section>
 
   <section class="sheet" id="sheet-stats" role="dialog" aria-modal="true" aria-labelledby="t-stats" hidden>
@@ -697,6 +738,7 @@ summary span { font-weight: 400; color: var(--ink-2); font-size: 12px; margin-le
     <label class="switch"><span><b>Sound</b><small>A chime for a right digit, a low buzz for a wrong one. Wrong means a clash with a row, column, box or slice, or a miss while instant checking is on. With instant checking off, only clashes make a sound.</small></span><input type="checkbox" id="optSound"><span class="track"></span></label>
     <label class="switch"><span><b>Keep cube digits upright</b><small>In the 3D cube, digits and notes turn in quarter steps so they always read the right way up, whichever way you turn the cube. Level also stands the cube itself upright.</small></span><input type="checkbox" id="optUpright"><span class="track"></span></label>
     <label class="switch"><span><b>Raise the selected cell</b><small>The selected cell lifts slightly off the board, and on the 3D cube its visible faces grow outward, so you can find it at a glance.</small></span><input type="checkbox" id="optGrow"><span class="track"></span></label>
+    <label class="switch"><span><b>Cube navigator</b><small>In the 3D cube view, a small map in the top-left corner of the cube shows every layer, the selected cell, the cells hidden inside the cube (round) and, with Digit first, where the armed digit can still go. Tap it to select a cell. The &times; folds it into a small blue corner you can tap to open it again; this switch stays on until you turn it off. Off by default.</small></span><input type="checkbox" id="optNav"><span class="track"></span></label>
     <label class="switch"><span><b>Highlight related cells</b><small>Shade the row, column and box of the selected cell, and every matching digit.</small></span><input type="checkbox" id="optHighlight"><span class="track"></span></label>
   </section>
 
@@ -853,22 +895,65 @@ function solveCountPeers(grid, limit, rng, peers, D) {
 }
 
 /* Human-technique solver. State: placed values v, candidate masks c, plus the geometry. */
-function makeState(grid, geo) {
+function makeState(grid, geo, withLog) {
   geo = geo || GEO2;
-  const n = geo.n, v = Int8Array.from(grid), c = new Int32Array(n), full = geo.full || 511;
+  const n = geo.n, v = Int8Array.from(grid), c = new Int32Array(n), full = geo.full || 511, D = geo.D || 9;
   for (let i = 0; i < n; i++) {
     if (v[i]) continue;
     let m = full;
     for (const p of geo.peers[i]) if (v[p]) m &= ~(1 << (v[p] - 1));
     c[i] = m;
   }
-  return { v, c, n, units: geo.units, peers: geo.peers, has: geo.has, D: geo.D || 9 };
+  const S = { v, c, n, units: geo.units, peers: geo.peers, has: geo.has, D, log: null };
+  /* Provenance (only when asked for, so grading stays fast): every deduction is logged as an event with the earlier
+     events it relied on (needs) and the starting cells that ruled digits out (base). why[] says which event removed each
+     candidate, placedBy[] which event filled each cell, v0 is the board as the player sees it. */
+  if (withLog) { S.log = []; S.why = new Int32Array(n * D); S.placedBy = new Int32Array(n); S.cuts = []; S.v0 = Int8Array.from(grid); }
+  return S;
 }
 function place(S, i, d) {
+  const bit = 1 << (d - 1);
+  if (S.cuts) {
+    const D = S.D;
+    for (let e = 0; e < D; e++) if ((S.c[i] >> e & 1) && e !== d - 1) S.cuts.push(i * D + e);
+    for (const p of S.peers[i]) if (S.c[p] & bit) S.cuts.push(p * D + d - 1);
+  }
   S.v[i] = d; S.c[i] = 0;
-  const bit = ~(1 << (d - 1));
-  for (const p of S.peers[i]) S.c[p] &= bit;
+  const nb = ~bit;
+  for (const p of S.peers[i]) S.c[p] &= nb;
 }
+/* Remove the digits in mask from cell i's candidates; true if anything changed. Logs each removal when tracing. */
+function cut(S, i, mask) {
+  const o = S.c[i] & mask;
+  if (!o) return false;
+  S.c[i] &= ~mask;
+  if (S.cuts) for (let e = 0; e < S.D; e++) if (o >> e & 1) S.cuts.push(i * S.D + e);
+  return true;
+}
+/* Before a move: resolve the facts it relies on ([cell, digitIndex] = that digit is not a candidate there) into the earlier
+   events that established them, or into the starting cells that already rule the digit out. */
+function trace(S, pairs) {
+  if (!S.log) return null;
+  const needs = new Set(), base = new Set();
+  for (const pr of pairs) {
+    const c = pr[0], e = pr[1];
+    if (S.v[c]) { if (S.placedBy[c]) needs.add(S.placedBy[c]); continue; }
+    const w = S.why[c * S.D + e];
+    if (w) needs.add(w);
+    else for (const p of S.peers[c]) if (S.v0[p] === e + 1) { base.add(p); break; }
+  }
+  return { needs: Array.from(needs), base: Array.from(base) };
+}
+/* After a move: file the event and claim the removals it just made. */
+function emit(S, ev, tr) {
+  if (!S.log || !tr) return;
+  ev.id = S.log.length + 1; ev.needs = tr.needs; ev.base = tr.base; ev.elims = S.cuts.slice();
+  for (const key of S.cuts) if (!S.why[key]) S.why[key] = ev.id;
+  S.cuts.length = 0;
+  if (ev.i != null && ev.i >= 0) S.placedBy[ev.i] = ev.id;
+  S.log.push(ev);
+}
+const bitsOf = (m, D) => { const o = []; for (let e = 0; e < D; e++) if (m >> e & 1) o.push(e + 1); return o; };
 function combos(n, k, cb) {
   const idx = [];
   function rec(s) {
@@ -878,14 +963,23 @@ function combos(n, k, cb) {
   }
   return rec(0);
 }
+function doNaked(S, i) {
+  const d = 31 - Math.clz32(S.c[i]) + 1;
+  let tr = null;
+  if (S.log) { const pr = []; for (let e = 0; e < S.D; e++) if (e !== d - 1) pr.push([i, e]); tr = trace(S, pr); }
+  place(S, i, d);
+  emit(S, { tech: 'naked', i, d, cells: [i] }, tr);
+  return { tech: 'naked', i, d };
+}
+function doHidden(S, at, d, u) {
+  let tr = null;
+  if (S.log) tr = trace(S, S.units[u].filter(j => j !== at).map(j => [j, d]));
+  place(S, at, d + 1);
+  emit(S, { tech: 'hidden', i: at, d: d + 1, unit: u, cells: [at] }, tr);
+  return { tech: 'hidden', i: at, d: d + 1, unit: u };
+}
 function tNaked(S) {
-  for (let i = 0; i < S.n; i++) {
-    if (!S.v[i] && POP[S.c[i]] === 1) {
-      const d = 31 - Math.clz32(S.c[i]) + 1;
-      place(S, i, d);
-      return { tech: 'naked', i, d };
-    }
-  }
+  for (let i = 0; i < S.n; i++) if (!S.v[i] && POP[S.c[i]] === 1) return doNaked(S, i);
   return null;
 }
 function tHidden(S) {
@@ -895,7 +989,7 @@ function tHidden(S) {
       const bit = 1 << d;
       let n = 0, at = -1;
       for (const i of U) { if (!S.v[i] && (S.c[i] & bit)) { n++; at = i; if (n > 1) break; } }
-      if (n === 1) { place(S, at, d + 1); return { tech: 'hidden', i: at, d: d + 1, unit: u }; }
+      if (n === 1) return doHidden(S, at, d, u);
     }
   }
   return null;
@@ -910,10 +1004,11 @@ function tLocked(S) {
       const sameRow = cells.every(i => ROW[i] === ROW[cells[0]]);
       const sameCol = cells.every(i => COL[i] === COL[cells[0]]);
       if (!sameRow && !sameCol) continue;
-      const line = sameRow ? UNITS[ROW[cells[0]]] : UNITS[9 + COL[cells[0]]];
+      const lineU = sameRow ? ROW[cells[0]] : 9 + COL[cells[0]], line = UNITS[lineU];
+      const tr = S.log ? trace(S, U.filter(j => !cells.includes(j)).map(j => [j, d])) : null;
       let ch = false;
-      for (const i of line) if (BOX[i] !== b && !S.v[i] && (S.c[i] & bit)) { S.c[i] &= ~bit; ch = true; }
-      if (ch) return { tech: 'locked', elim: true, region: cells };
+      for (const i of line) if (BOX[i] !== b && !S.v[i] && cut(S, i, bit)) ch = true;
+      if (ch) { emit(S, { tech: 'locked', d: d + 1, from: 18 + b, unit: lineU, cells }, tr); return { tech: 'locked', elim: true, region: cells }; }
     }
   }
   for (let u = 0; u < 18; u++) {
@@ -923,9 +1018,11 @@ function tLocked(S) {
       const cells = U.filter(i => !S.v[i] && (S.c[i] & bit));
       if (cells.length < 2) continue;
       if (!cells.every(i => BOX[i] === BOX[cells[0]])) continue;
+      const boxU = 18 + BOX[cells[0]];
+      const tr = S.log ? trace(S, U.filter(j => !cells.includes(j)).map(j => [j, d])) : null;
       let ch = false;
-      for (const i of UNITS[18 + BOX[cells[0]]]) if (!U.includes(i) && !S.v[i] && (S.c[i] & bit)) { S.c[i] &= ~bit; ch = true; }
-      if (ch) return { tech: 'locked', elim: true, region: cells };
+      for (const i of UNITS[boxU]) if (!U.includes(i) && !S.v[i] && cut(S, i, bit)) ch = true;
+      if (ch) { emit(S, { tech: 'locked', d: d + 1, from: u, unit: boxU, cells }, tr); return { tech: 'locked', elim: true, region: cells }; }
     }
   }
   return null;
@@ -940,9 +1037,10 @@ function tLockedCube(S) {
       if (cells.length < 2) continue;
       for (let w = 0; w < U.length; w++) {
         if (w === u || !cells.every(i => S.has[w][i])) continue;
+        const tr = S.log ? trace(S, U[u].filter(j => !cells.includes(j)).map(j => [j, d])) : null;
         let ch = false;
-        for (const i of U[w]) if (!S.has[u][i] && !S.v[i] && (S.c[i] & bit)) { S.c[i] &= ~bit; ch = true; }
-        if (ch) return { tech: 'locked', elim: true, region: cells };
+        for (const i of U[w]) if (!S.has[u][i] && !S.v[i] && cut(S, i, bit)) ch = true;
+        if (ch) { emit(S, { tech: 'locked', d: d + 1, from: u, unit: w, cells }, tr); return { tech: 'locked', elim: true, region: cells }; }
       }
     }
   }
@@ -960,9 +1058,11 @@ function tNakedSub(k) {
         for (const x of idx) m |= S.c[cells[x]];
         if (POP[m] !== k) return false;
         const set = idx.map(x => cells[x]);
+        let tr = null;
+        if (S.log) { const pr = []; for (const c of set) for (let e = 0; e < S.D; e++) if (!(m >> e & 1)) pr.push([c, e]); tr = trace(S, pr); }
         let ch = false;
-        for (const i of U) if (!S.v[i] && !set.includes(i) && (S.c[i] & m)) { S.c[i] &= ~m; ch = true; }
-        if (ch) { res = { tech: k === 2 ? 'nakedPair' : 'nakedTriple', elim: true, region: set }; return true; }
+        for (const i of U) if (!S.v[i] && !set.includes(i) && cut(S, i, m)) ch = true;
+        if (ch) { emit(S, { tech: k === 2 ? 'nakedPair' : 'nakedTriple', digits: bitsOf(m, S.D), unit: u, cells: set }, tr); res = { tech: k === 2 ? 'nakedPair' : 'nakedTriple', elim: true, region: set }; return true; }
         return false;
       });
       if (res) return res;
@@ -988,8 +1088,11 @@ function tHiddenSub(k) {
         if (POP[pm] !== k) return false;
         let ch = false;
         const set = [];
-        for (let x = 0; x < U.length; x++) if (pm >> x & 1) { const i = U[x]; set.push(i); if (S.c[i] & ~dm) { S.c[i] &= dm; ch = true; } }
-        if (ch) { res = { tech: k === 2 ? 'hiddenPair' : 'hiddenTriple', elim: true, region: set }; return true; }
+        for (let x = 0; x < U.length; x++) if (pm >> x & 1) set.push(U[x]);
+        let tr = null;
+        if (S.log) { const pr = []; for (const e of bitsOf(dm, S.D)) for (const j of U) if (!set.includes(j)) pr.push([j, e - 1]); tr = trace(S, pr); }
+        for (const i of set) if (cut(S, i, ~dm & ((1 << S.D) - 1))) ch = true;
+        if (ch) { emit(S, { tech: k === 2 ? 'hiddenPair' : 'hiddenTriple', digits: bitsOf(dm, S.D), unit: u, cells: set }, tr); res = { tech: k === 2 ? 'hiddenPair' : 'hiddenTriple', elim: true, region: set }; return true; }
         return false;
       });
       if (res) return res;
@@ -1009,18 +1112,21 @@ function tXWing(S) {
       for (let x = 0; x < cand.length; x++) for (let y = x + 1; y < cand.length; y++) {
         if (cand[x][1] !== cand[y][1]) continue;
         const m = cand[x][1];
+        let tr = null;
+        if (S.log) { const pr = []; for (const a of [cand[x][0], cand[y][0]]) for (let b = 0; b < 9; b++) if (!(m >> b & 1)) pr.push([o === 0 ? a * 9 + b : b * 9 + a, d]); tr = trace(S, pr); }
         let ch = false;
         for (let b = 0; b < 9; b++) {
           if (!(m >> b & 1)) continue;
           for (let a = 0; a < 9; a++) {
             if (a === cand[x][0] || a === cand[y][0]) continue;
             const i = o === 0 ? a * 9 + b : b * 9 + a;
-            if (!S.v[i] && (S.c[i] & bit)) { S.c[i] &= ~bit; ch = true; }
+            if (!S.v[i] && cut(S, i, bit)) ch = true;
           }
         }
         if (ch) {
           const region = [];
           for (const a of [cand[x][0], cand[y][0]]) for (let b = 0; b < 9; b++) if (m >> b & 1) region.push(o === 0 ? a * 9 + b : b * 9 + a);
+          emit(S, { tech: 'xwing', d: d + 1, unit: o === 0 ? cand[x][0] : 9 + cand[x][0], from: o === 0 ? cand[y][0] : 9 + cand[y][0], cells: region }, tr);
           return { tech: 'xwing', elim: true, region };
         }
       }
@@ -1208,6 +1314,100 @@ function nextStep(vals, solution, geo) {
   for (let i = 0; i < n; i++) if (!vals[i] && !S.v[i]) { const c = POP[S.c[i]]; if (c && c < bn) { bn = c; bi = i; } }
   if (bi < 0) for (let i = 0; i < n; i++) if (!vals[i]) { bi = i; break; }
   return { type: 'advanced', i: bi, d: solution[bi] };
+}
+
+/* "Why?" explanations. Both functions work from the board alone (never the solution): they run the same human techniques as the
+   grader with provenance switched on, then keep only the steps the answer actually depends on, in the order they happen.
+   A step is { tech, digit | digits, unit, from, cells, base, i }: `cells` is the pattern, `base` the cells already on the
+   board that rule digits out, `unit`/`from` the slices involved (indices into geo.units). Failures return { ok: false, reason }. */
+function boardConsistent(vals, geo) {
+  const S = makeState(vals, geo);
+  for (let i = 0; i < S.n; i++) {
+    if (vals[i]) { for (const p of S.peers[i]) if (vals[p] === vals[i]) return false; }
+    else if (!S.c[i]) return false;
+  }
+  return true;
+}
+/* A single that already exists at cell i (naked, else hidden in some slice through it). */
+function singleAt(S, i) {
+  if (S.v[i]) return false;
+  if (POP[S.c[i]] === 1) { doNaked(S, i); return true; }
+  for (let u = 0; u < S.units.length; u++) {
+    const U = S.units[u];
+    if (!U.includes(i)) continue;
+    for (let d = 0; d < S.D; d++) {
+      if (!(S.c[i] >> d & 1)) continue;
+      let alone = true;
+      for (const j of U) if (j !== i && !S.v[j] && (S.c[j] >> d & 1)) { alone = false; break; }
+      if (alone) { doHidden(S, i, d, u); return true; }
+    }
+  }
+  return false;
+}
+/* Work towards a goal. Two orders are tried by the callers and the shorter explanation wins:
+   0 = patterns first (a single at the target, then candidate-removing patterns, other singles only when stuck),
+   1 = the grader's order (singles anywhere first, then patterns). Whatever the answer does not depend on is pruned afterwards. */
+function runUntil(S, geo, stop, target, order) {
+  const elimTechs = geo.techs.filter(t => t.id !== 'naked' && t.id !== 'hidden');
+  const singles = geo.techs.filter(t => t.id === 'naked' || t.id === 'hidden');
+  for (let guard = 0; guard < 800; guard++) {
+    if (stop()) return true;
+    if (target >= 0 && singleAt(S, target)) continue;
+    let r = null;
+    for (const t of order === 0 ? elimTechs.concat(singles) : singles.concat(elimTechs)) { r = t.fn(S); if (r) break; }
+    if (!r) return stop();
+  }
+  return stop();
+}
+function stepsFrom(S, start) {
+  const seen = new Set(), stack = [start];
+  while (stack.length) {
+    const id = stack.pop();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    for (const nd of S.log[id - 1].needs) stack.push(nd);
+  }
+  return Array.from(seen).sort((a, b) => a - b).map(id => {
+    const e = S.log[id - 1];
+    return { tech: e.tech, digit: e.d || 0, digits: e.digits || null, unit: e.unit == null ? -1 : e.unit, from: e.from == null ? -1 : e.from, cells: e.cells, base: e.base, i: e.i == null ? -1 : e.i };
+  });
+}
+function explainCell(vals, i, geo) {
+  geo = geo || GEO2;
+  const g = Int8Array.from(vals), had = g[i];
+  g[i] = 0;
+  if (!boardConsistent(g, geo)) return { ok: false, reason: 'conflict' };
+  let best = null;
+  for (let order = 0; order < 2; order++) {
+    const S = makeState(g, geo, true);
+    if (!runUntil(S, geo, () => S.v[i] !== 0, i, order)) continue;
+    const steps = stepsFrom(S, S.placedBy[i]);
+    if (!best || steps.length < best.steps.length) best = { ok: true, kind: 'cell', cell: i, digit: S.v[i], had, steps };
+  }
+  return best || { ok: false, reason: 'advanced' };
+}
+function explainElim(vals, i, d, geo) {
+  geo = geo || GEO2;
+  if (vals[i]) return { ok: false, reason: 'filled' };
+  if (!boardConsistent(vals, geo)) return { ok: false, reason: 'conflict' };
+  const bit = 1 << (d - 1);
+  const S0 = makeState(vals, geo);
+  if (!(S0.c[i] & bit)) {
+    for (const p of S0.peers[i]) if (vals[p] === d) {
+      let u = -1;
+      for (let k = 0; k < geo.units.length && u < 0; k++) if (geo.units[k].includes(i) && geo.units[k].includes(p)) u = k;
+      return { ok: true, kind: 'elim', cell: i, digit: d, steps: [{ tech: 'peer', digit: d, digits: null, unit: u, from: -1, cells: [p], base: [p], i: -1 }] };
+    }
+  }
+  let best = null;
+  for (let order = 0; order < 2; order++) {
+    const S = makeState(vals, geo, true);
+    if (!runUntil(S, geo, () => S.v[i] !== 0 || !(S.c[i] & bit), -1, order) || S.v[i] === d) continue;
+    const w = S.why[i * S.D + d - 1];
+    const steps = w ? stepsFrom(S, w) : [];
+    if (!best || steps.length < best.steps.length) best = { ok: true, kind: 'elim', cell: i, digit: d, steps };
+  }
+  return best || { ok: false, reason: 'possible' };
 }
 
 function codeOf(level, seed, mode) {
@@ -1453,6 +1653,7 @@ const C3 = (() => {
       const lit = Math.max(0, Math.min(1, -it.nz[0] * 0.25 - it.nz[1] * 0.6 + it.nz[2] * 0.75));
       ctx.fillStyle = 'rgba(10,20,40,' + (0.17 * (1 - lit)).toFixed(3) + ')'; ctx.fill();
       ctx.lineWidth = 1; ctx.strokeStyle = T.strong; ctx.stroke();
+      if (cls.has('br')) { ctx.save(); ctx.globalAlpha = 0.8; ctx.lineWidth = 1.4; ctx.setLineDash([4, 3]); ctx.strokeStyle = T.accent; pathPoly(it.quad.map(q => [it.pc[0] + (q[0] - it.pc[0]) * 0.78, it.pc[1] + (q[1] - it.pc[1]) * 0.78])); ctx.stroke(); ctx.restore(); }
       if (cls.has('sel')) { ctx.lineWidth = 3.5; ctx.strokeStyle = T.accent; ctx.stroke(); }
       else if (cls.has('target')) { ctx.lineWidth = 3.5; ctx.strokeStyle = T.ring; ctx.stroke(); }
       hits.push({ i, quad: it.hq || it.quad });
@@ -1637,14 +1838,21 @@ const C3 = (() => {
     new MutationObserver(request).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
 
     wireArrows();
-    cv.addEventListener('contextmenu', e => e.preventDefault());
+    cv.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      const r = cv.getBoundingClientRect(), i = hitAt(e.clientX - r.left, e.clientY - r.top);
+      if (gest) { clearTimeout(gest.lp); gest.fired = true; }
+      if (i >= 0 && G && !G.paused) { G.sel = i; lastSel = i; startWhy(i); }
+    });
     cv.addEventListener('pointerdown', e => {
       e.preventDefault();
       try { cv.setPointerCapture(e.pointerId); } catch (_) {}
       const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
       ptrs.set(e.pointerId, { x, y });
-      if (ptrs.size === 1) { gest = { x0: x, y0: y, lx: x, ly: y, t0: performance.now(), moved: false, target: hitAt(x, y) }; gest.rad = grabRadius(gest.target); }
+      if (ptrs.size === 1) { gest = { x0: x, y0: y, lx: x, ly: y, t0: performance.now(), moved: false, target: hitAt(x, y) }; gest.rad = grabRadius(gest.target);
+        if (gest.target >= 0 && !(OPT.digitFirst && G.armed) && e.pointerType !== 'mouse') { const tg = gest.target, g0 = gest; gest.lp = setTimeout(() => { if (gest === g0 && !g0.moved && G && !G.paused) { g0.fired = true; G.sel = tg; lastSel = tg; startWhy(tg); } }, 520); } }
       else if (ptrs.size === 2) {
+        if (gest) clearTimeout(gest.lp);
         gest = null;
         const [a, b] = [...ptrs.values()];
         pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: zoom };
@@ -1661,7 +1869,7 @@ const C3 = (() => {
         return;
       }
       if (!gest) return;
-      if (!gest.moved && Math.hypot(x - gest.x0, y - gest.y0) > (gest.target >= 0 ? 16 : 8)) { gest.moved = true; gest.lx = gest.x0; gest.ly = gest.y0; }
+      if (!gest.moved && Math.hypot(x - gest.x0, y - gest.y0) > (gest.target >= 0 ? 16 : 8)) { gest.moved = true; clearTimeout(gest.lp); gest.lx = gest.x0; gest.ly = gest.y0; }
       const dx = x - gest.lx, dy = y - gest.ly;
       if (gest.moved) {
         if (isLocked() || dead()) nudge();
@@ -1675,7 +1883,8 @@ const C3 = (() => {
       ptrs.delete(e.pointerId);
       if (ptrs.size < 2) pinch = null;
       if (spin) { spin = false; request(); }
-      if (gest && ptrs.size === 0 && e.type === 'pointerup' && !gest.moved && performance.now() - gest.t0 < 700) tap(x, y);
+      if (gest) clearTimeout(gest.lp);
+      if (gest && ptrs.size === 0 && e.type === 'pointerup' && !gest.moved && !gest.fired && performance.now() - gest.t0 < 700) tap(x, y);
       if (ptrs.size === 0) gest = null;
     };
     cv.addEventListener('pointerup', end);
@@ -1942,6 +2151,7 @@ const IC = {
   play: '<polygon points="6 3 20 12 6 21 6 3"/>',
   learn: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
   stats: '<path d="M3 3v18h18"/><path d="M8 16v-5"/><path d="M13 16V7"/><path d="M18 16v-8"/>',
+  branch: '<circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10"/><path d="M18 10c0 4-4 5-12 7"/>',
   lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   rotate: '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/>',
   settings: '<path d="M4 6h9"/><path d="M17 6h3"/><circle cx="15" cy="6" r="2"/><path d="M4 12h3"/><path d="M11 12h9"/><circle cx="9" cy="12" r="2"/><path d="M4 18h9"/><path d="M17 18h3"/><circle cx="15" cy="18" r="2"/>'
@@ -1985,7 +2195,7 @@ function cubePos(a, i) {
 const COLAX = [1, 0, 0], ROWAX = [2, 2, 1];
 
 const blankStats = () => ({ played: [0, 0, 0, 0, 0], won: [0, 0, 0, 0, 0], best: [null, null, null, null, null], total: [0, 0, 0, 0, 0] });
-let OPT = Object.assign({ instant: true, strict: false, highlight: true, autofill: true, sound: true, view: 'cube3d', upright: true, digitFirst: false }, LS.get('ninefold:opt') || {});
+let OPT = Object.assign({ instant: true, strict: false, highlight: true, autofill: true, sound: true, view: 'cube3d', upright: true, digitFirst: false, navigator: false, navOpen: true }, LS.get('ninefold:opt') || {});
 const VIEWS = ['cube3d', 'flat', 'stack'];
 if (!VIEWS.includes(OPT.view)) OPT.view = 'cube3d';
 let ST = LS.get('ninefold:stats');
@@ -1996,7 +2206,7 @@ let G = null, newMode = 'classic', flashTimer = null, spentT = 0;
 
 function serialize() {
   if (!G) return {};
-  return { v: 2, mode: G.mode, axis: G.axis, view: G.view, level: G.level, reqLevel: G.reqLevel, seed: G.seed, givens: Array.from(G.givens), sol: Array.from(G.sol), vals: Array.from(G.vals), notes: Array.from(G.notes), mistakes: G.mistakes, hints: G.hints, elapsed: G.elapsed, notesMode: G.notesMode, done: G.done, over: G.over, sel: G.sel, fills: G.fills };
+  return { v: 3, branch: G.branch ? { stack: G.branch.stack.map(b => ({ vals: Array.from(b.vals), notes: Array.from(b.notes) })) } : null, mode: G.mode, axis: G.axis, view: G.view, level: G.level, reqLevel: G.reqLevel, seed: G.seed, givens: Array.from(G.givens), sol: Array.from(G.sol), vals: Array.from(G.vals), notes: Array.from(G.notes), mistakes: G.mistakes, hints: G.hints, elapsed: G.elapsed, notesMode: G.notesMode, done: G.done, over: G.over, sel: G.sel, fills: G.fills };
 }
 function save() { if (G) LS.set('ninefold:save', serialize()); }
 function install(p) {
@@ -2007,15 +2217,18 @@ function install(p) {
     givens: Int8Array.from(p.givens), sol: Int8Array.from(p.sol), vals: Int8Array.from(p.vals || p.givens),
     notes: p.notes ? Int32Array.from(p.notes) : new Int32Array(MODES[mode].n),
     sel: typeof p.sel === 'number' ? p.sel : -1, notesMode: !!p.notesMode, mistakes: p.mistakes || 0, hints: p.hints || 0,
-    elapsed: p.elapsed || 0, undo: [], redo: [], done: !!p.done, over: !!p.over, paused: false, hint: null, flash: null, peek: null, peekCand: null
+    elapsed: p.elapsed || 0, undo: [], redo: [], done: !!p.done, over: !!p.over, paused: false, hint: null, flash: null, peek: null, peekCand: null, branch: null
   };
+  { const n = MODES[mode].n, st = p.branch && Array.isArray(p.branch.stack) ? p.branch.stack : [];
+    if (st.length && st.length <= BRANCH_MAX && st.every(b => b && b.vals && b.notes && b.vals.length === n && b.notes.length === n))
+      G.branch = { stack: st.map(b => ({ vals: Int8Array.from(b.vals), notes: Int32Array.from(b.notes), undoLen: 0 })) }; }
   clearTimeout(peekT);
   G.fills = typeof p.fills === 'number' ? p.fills : MODES[mode].levels[p.level].fills;
   if (typeof p.sel !== 'number' && !(isCube(mode) && G.view === 'cube3d')) G.sel = G.givens.findIndex(v => !v);
 }
 function restore(d) {
   try {
-    if (!d || (d.v !== 1 && d.v !== 2)) return false;
+    if (!d || (d.v !== 1 && d.v !== 2 && d.v !== 3)) return false;
     const mode = d.mode || 'classic';
     if (!MODES[mode]) return false;
     const n = MODES[mode].n;
@@ -2035,7 +2248,8 @@ function mutate(i, v1, n1, ch) {
 }
 function commit(ch) {
   if (!ch.length) return;
-  G.undo.push(ch); if (G.undo.length > 400) G.undo.shift();
+  G.undo.push(ch);
+  if (G.undo.length > 400) { G.undo.shift(); if (G.branch) for (const b of G.branch.stack) if (b.undoLen > 0) b.undoLen--; }
   G.redo = [];
 }
 const sheetOpen = () => !$('#scrim').hidden;
@@ -2045,7 +2259,7 @@ const blocked = () => !G || G.paused || G.done || G.over || sheetOpen();
    but only when that digit is the true one, so a unit holding a wrong entry is left alone. Cascades. */
 function autoFillPass(ch, flash) {
   if (!OPT.autofill || !G) return 0;
-  const geo = M().geo;
+  const geo = M().geo, fk = branchTop();
   let total = 0, again = true;
   while (again) {
     again = false;
@@ -2053,6 +2267,7 @@ function autoFillPass(ch, flash) {
       let empty = -1, cnt = 0, mask = 0;
       for (const i of U) { const v = G.vals[i]; if (v) mask |= 1 << (v - 1); else { cnt++; empty = i; } }
       if (cnt !== 1) continue;
+      if (fk) { let was = 0; for (const i of U) if (!fk.vals[i]) was++; if (was <= 1) continue; }
       const miss = geo.full & ~mask;
       if (POP[miss] !== 1) continue;
       const d = 31 - Math.clz32(miss) + 1;
@@ -2171,6 +2386,7 @@ let longFired = false;
 function enter(d) {
   if (blocked()) return;
   if (G.marking) { toggleMark(d); return; }
+  if (G.why && G.why.ask) { whyDigit(d); return; }
   const i = G.sel;
   if (i < 0 || G.givens[i]) return;
   G.hint = null;
@@ -2208,7 +2424,7 @@ function erase() {
   finishMove(ch, false);
 }
 function undo() {
-  if (blocked() || !G.undo.length) return;
+  if (blocked() || G.undo.length <= branchFloor()) return;
   const ch = G.undo.pop();
   for (let k = ch.length - 1; k >= 0; k--) { G.vals[ch[k].i] = ch[k].v0; G.notes[ch[k].i] = ch[k].n0; }
   G.redo.push(ch); G.hint = null; G.flash = null;
@@ -2225,7 +2441,7 @@ function afterChange() {
   if (OPT.strict && OPT.instant && G.mistakes >= 3 && !G.over) { G.over = true; render(); save(); openSheet('over'); return; }
   let solved = true;
   for (let i = 0; i < M().n; i++) if (G.vals[i] !== G.sol[i]) { solved = false; break; }
-  if (solved && !G.done) { G.done = true; G.hint = null; finish(); }
+  if (solved && !G.done) { G.done = true; G.hint = null; G.branch = null; finish(); }
   render(); save();
 }
 function finish() {
@@ -2246,9 +2462,40 @@ function finish() {
   setTimeout(() => { if (G && G.done) openSheet('win'); }, 1100);
 }
 
+
+/* Branching: fork the board, explore, then commit or abandon. A snapshot holds cells and notes only; the undo history keeps growing as
+   usual and Abandon trims it back to the fork point. Mistakes and hints already used are never given back, so a branch is no escape
+   from strict mode. Branches can nest (BRANCH_MAX deep): Commit folds the innermost one into the one around it. */
+const BRANCH_MAX = 4;
+const branchTop = () => G && G.branch ? G.branch.stack[G.branch.stack.length - 1] : null;
+const branchFloor = () => { const t = branchTop(); return t ? t.undoLen : 0; };
+const branchMoves = () => Math.max(0, G.undo.length - branchFloor());
+function fork() {
+  if (blocked() || G.marking) return;
+  const st = G.branch ? G.branch.stack : [];
+  if (st.length >= BRANCH_MAX) return;
+  G.hint = null; G.why = null; G.flash = null;
+  st.push({ vals: Int8Array.from(G.vals), notes: Int32Array.from(G.notes), undoLen: G.undo.length });
+  G.branch = { stack: st };
+  render(); save();
+}
+function branchEnd(restoreBoard) {
+  const t = branchTop();
+  if (!t || !G || G.paused) return;
+  if (restoreBoard) {
+    G.vals.set(t.vals); G.notes.set(t.notes);
+    G.undo.length = Math.min(G.undo.length, t.undoLen); G.redo = [];
+  }
+  G.branch.stack.pop();
+  if (!G.branch.stack.length) G.branch = null;
+  G.hint = null; G.why = null; G.flash = null;
+  render(); save();
+}
+
 /* Hints: three stages, then the digit is placed */
 function doHint() {
   if (blocked()) return;
+  G.why = null;
   if (!G.hint) { G.hint = { step: nextStep(G.vals, G.sol, M().geo), stage: 1 }; G.hints++; G.flash = null; render(); save(); return; }
   advanceHint();
 }
@@ -2308,6 +2555,96 @@ function hintView() {
   return { label, text, region, target, btn };
 }
 
+
+/* Why? Explains a cell from the board alone. A filled cell: why is it this digit. An empty cell: pick a digit, and why it cannot go there.
+   The explanation is a short list of steps (see explainCell); the shaded cells are the evidence for the step being shown. */
+const digitList = a => a.join(', ').replace(/, (\d+)$/, ' and $1');
+function whyStepText(s, cell) {
+  const cube = isCube(G.mode), dg = s.digits ? digitList(s.digits) : s.digit;
+  switch (s.tech) {
+    case 'peer': return cName(s.cells[0]) + ' already holds ' + s.digit + ' and shares ' + uName(s.unit) + ' with ' + cName(cell) + ', so ' + s.digit + ' cannot go there.';
+    case 'naked': return cName(s.i) + ' has one candidate left, ' + s.digit + ': ' + (cube ? 'the slices through it' : 'its row, column and box') + ' (and the steps before this one) rule out every other digit.';
+    case 'hidden': return 'In ' + uName(s.unit) + ', ' + s.digit + ' has only one place left to go: ' + cName(s.i) + '. Every other cell there is full, or already ruled out for ' + s.digit + '.';
+    case 'locked': return 'In ' + uName(s.from) + ', ' + s.digit + ' can only go in the shaded cells, and they all lie in ' + uName(s.unit) + '. So ' + s.digit + ' is removed from the rest of ' + uName(s.unit) + '.';
+    case 'nakedPair': case 'nakedTriple': return 'In ' + uName(s.unit) + ', the shaded cells can only hold ' + dg + ' between them. Those digits belong to those cells, so they are removed from the rest of ' + uName(s.unit) + '.';
+    case 'hiddenPair': case 'hiddenTriple': return 'In ' + uName(s.unit) + ', ' + dg + ' can only go in the shaded cells, so those cells cannot hold anything else.';
+    case 'xwing': { const rows = s.unit < 9; return 'Digit ' + s.digit + ' has just two places in ' + uName(s.unit) + ' and just two in ' + uName(s.from) + ', in the same two ' + (rows ? 'columns' : 'rows') + '. It must sit in opposite corners, so it is removed from the rest of those ' + (rows ? 'columns' : 'rows') + '.'; }
+  }
+  return '';
+}
+function whyView() {
+  const W = G && G.why;
+  if (!W) return null;
+  const cube = isCube(G.mode), v3 = cube && G.view === 'cube3d';
+  if (W.ask) return { label: 'Why can’t…?', text: 'Which digit? Tap it on the pad (or type it) to see why it cannot go in ' + cName(W.cell) + '. Esc cancels.', region: null, target: W.cell, btns: [['whyx', 'Cancel', 0]] };
+  if (W.msg) return { label: W.label, text: W.msg, region: null, target: W.cell, btns: (W.again ? [['why', 'Another digit', 0]] : []).concat([['whyx', 'Close', 1]]) };
+  const R = W.res, n = R.steps.length, k = Math.max(0, Math.min(W.k, n - 1)), s = R.steps[k], last = k === n - 1;
+  let text = whyStepText(s, R.cell);
+  if (last && s.tech !== 'peer') text += R.kind === 'cell' ? ' So ' + cName(R.cell) + ' is ' + R.digit + '.' : ' So ' + R.digit + ' cannot go in ' + cName(R.cell) + '.';
+  if (v3 && (s.cells.length > 1 || s.base.length)) text += ' Some of the shaded cells may be out of sight: turn the cube, or use Peel.';
+  const label = (R.kind === 'cell' ? cName(R.cell) + ' is ' + R.digit : R.digit + ' not in ' + cName(R.cell)) + (n > 1 ? ' · step ' + (k + 1) + ' of ' + n : '');
+  const btns = [];
+  if (k > 0) btns.push(['whyprev', 'Back', 0]);
+  if (!last) btns.push(['whynext', 'Next', 1]);
+  else { if (R.kind === 'elim') btns.push(['why', 'Another digit', 0]); btns.push(['whyx', 'Done', 1]); }
+  return { label, text, region: Array.from(new Set(s.cells.concat(s.base))), target: R.cell, btns };
+}
+function startWhy(i) {
+  if (!G || blocked() || G.marking) return;
+  if (i == null) i = G.sel;
+  if (i < 0) return;
+  G.sel = i; G.hint = null; G.flash = null; G.armed = 0;
+  const geo = M().geo, stamp = G.vals.join('');
+  const say = (label, msg) => { G.why = { cell: i, stamp, label, msg }; render(); };
+  if (G.givens[i]) return say('Starting clue', cName(i) + ' is a starting clue, so there is nothing to explain. Select an empty cell, or one you filled yourself.');
+  if (G.vals.some((v, k) => v && v !== G.sol[k])) return say('Check the board first', 'A digit on the board is wrong, so no explanation can be trusted yet. Use Hint to find it, or Undo.');
+  if (G.vals[i]) {
+    const r = explainCell(G.vals, i, geo);
+    if (!r.ok || r.digit !== G.vals[i]) return say('Why ' + cName(i) + ' is ' + G.vals[i], r.reason === 'advanced' ? 'No standard pattern explains this: it needs advanced reasoning, such as a chain or wing.' : 'The standard patterns cannot confirm this digit yet.');
+    G.why = { cell: i, stamp, res: r, k: 0 };
+  } else G.why = { cell: i, stamp, ask: true };
+  render(); save();
+}
+function whyDigit(d) {
+  const W = G.why, i = W.cell, geo = M().geo;
+  const r = explainElim(G.vals, i, d, geo);
+  if (r.ok) { G.hints++; G.why = { cell: i, stamp: W.stamp, res: r, k: 0 }; }
+  else G.why = { cell: i, stamp: W.stamp, again: true, label: 'Why not ' + d + '?', msg: r.reason === 'possible' ? d + ' is still possible in ' + cName(i) + ', as far as the standard patterns can tell.' : r.reason === 'conflict' ? 'The board has a conflict, so the logic cannot be trusted. Use Hint to find it.' : 'No standard pattern explains this: it needs advanced reasoning.' };
+  render(); save();
+}
+
+
+/* Cube navigator: a small read-only map docked in the corner of the 3D view. The cube's layers (along the slicing axis) are drawn side by side
+   from the live board, so the selected cell, the slices it belongs to, the cells inside the cube (round) and the places the armed digit can
+   still go (small dots) are always in view. It only ever selects; it never places a digit. Built from G.vals and G.givens, never G.sol. */
+function renderNav() {
+  const nav = $('#nav'), N = M().N, a = G.axis, geo = M().geo;
+  const show = OPT.navigator === true && isCube(G.mode) && G.view === 'cube3d' && !G.paused;
+  nav.hidden = !show;
+  if (!show) return;
+  nav.classList.toggle('shut', OPT.navOpen === false);
+  if (OPT.navOpen === false) { nav.innerHTML = '<button class="nav-tri" data-nav="open" aria-label="Show the cube navigator" title="Show the cube navigator"></button>'; nav.setAttribute('aria-label', 'Cube navigator, closed'); return; }
+  const sel = G.sel, sp = sel >= 0 ? cubePos(a, sel) : null, arm = OPT.digitFirst && G.armed ? G.armed : 0;
+  const inside = i => { for (let q = 0; q < 3; q++) { const c = co(i, q); if (c === 0 || c === N - 1) return false; } return true; };
+  let o = '<div class="nav-h"><span class="nav-t">' + (sel >= 0 ? 'X' + (co(sel, 0) + 1) + ' Y' + (co(sel, 1) + 1) + ' Z' + (co(sel, 2) + 1) : AX[a] + ' layers') + '</span><button class="nav-x" data-nav="close" aria-label="Close the navigator" title="Close the navigator (the blue corner brings it back)">&times;</button></div><div class="nav-b">';
+  for (let k = 0; k < N; k++) {
+    o += '<div class="nav-l' + (sp && sp.k === k ? ' on' : '') + '" style="--n:' + N + '">';
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      const i = cubeIdx(a, k, r, c), v = G.vals[i];
+      let cls = 'nav-c';
+      if (G.givens[i]) cls += ' g'; else if (v) cls += ' f';
+      if (inside(i)) cls += ' core';
+      if (i === sel) cls += ' cs'; else if (sp && sp.r === r && sp.c === c) cls += ' cl';
+      if (arm && !v && !geo.peers[i].some(p => G.vals[p] === arm)) cls += ' ok';
+      if (arm && v === arm) cls += ' sm';
+      o += '<button class="' + cls + '" tabindex="-1" data-i="' + i + '" aria-label="' + cName(i) + (inside(i) ? ', inside the cube' : '') + ', ' + (v ? v : 'empty') + '"></button>';
+    }
+    o += '</div>';
+  }
+  nav.innerHTML = o + '</div>';
+  nav.setAttribute('aria-label', 'Cube navigator. Layers along ' + AX[a] + '. ' + (sel >= 0 ? 'Selected ' + cName(sel) + '.' : 'Nothing selected.'));
+}
+
 /* Rendering */
 function conflicts() {
   const peers = M().geo.peers, n = M().n, bad = new Uint8Array(n);
@@ -2323,7 +2660,9 @@ function render() {
   if (!OPT.digitFirst || (G.armed && digitCount(G.armed) >= M().cap)) G.armed = 0;
   const arm = G.armed || 0;
   const sv = arm || (G.sel >= 0 ? G.vals[G.sel] : 0), bad = conflicts(), h = hintView();
-  const reg = h && h.region ? new Set(h.region) : null;
+  if (G.why && (G.why.cell !== G.sel || G.why.stamp !== G.vals.join(''))) G.why = null;
+  const w = h ? null : whyView(), hv = h || w;
+  const reg = hv && hv.region ? new Set(hv.region) : null;
   const peerSet = G.sel >= 0 && OPT.highlight ? new Set(geo.peers[G.sel]) : null;
   if (G.sel !== pulseSel) { pulseSel = G.sel; GROW_T0 = G.sel >= 0 && !prefersReduced() ? performance.now() : 0; PULSE_T0 = peerSet && !prefersReduced() ? performance.now() : 0; }
   const pulsing = peerSet && PULSE_T0 && performance.now() - PULSE_T0 < 650;
@@ -2332,9 +2671,10 @@ function render() {
     const v = G.vals[i], given = G.givens[i] !== 0;
     let cls = '';
     if (given) cls += ' given';
+    else if (G.branch && v && v !== G.branch.stack[0].vals[i]) cls += ' br';
     if ((peerSet || arm) && i !== G.sel) { if (peerSet && peerSet.has(i)) cls += pulsing ? ' peer pp' : ' peer'; if (sv && v === sv) cls += ' same'; }
     if (reg && reg.has(i)) cls += ' region';
-    if (h && h.target === i) cls += ' target';
+    if (hv && hv.target === i) cls += ' target';
     if (i === G.sel) cls += ' sel' + (OPT.grow !== false ? ' up' + (GROW_T0 && performance.now() - GROW_T0 < 230 ? ' gr' : '') : '');
     if (!given && v && (bad[i] || (OPT.instant && v !== G.sol[i]))) cls += ' bad';
     if (flash && flash.has(i)) cls += ' auto';
@@ -2455,7 +2795,7 @@ function render() {
   updateTimer();
 
   const dead = G.done || G.over || G.paused, sel = G.sel;
-  $('#t-undo').disabled = dead || !G.undo.length;
+  $('#t-undo').disabled = dead || G.undo.length <= branchFloor();
   $('#t-redo').disabled = dead || !G.redo.length;
   $('#t-erase').disabled = dead || sel < 0 || !!G.givens[sel];
   $('#t-notes').setAttribute('aria-pressed', G.notesMode ? 'true' : 'false');
@@ -2503,9 +2843,14 @@ function render() {
   $('#pad').classList.toggle('noting', G.notesMode);
   $('#pad').classList.toggle('marking', !!G.marking);
 
+  { const bb = $('#branchbar'); bb.hidden = !G.branch; if (G.branch) { const dp = G.branch.stack.length, n = branchMoves(); $('#brIcon').innerHTML = svg(IC.branch, 16); $('#brInfo').textContent = 'Branch' + (dp > 1 ? ' ' + dp : '') + ' · ' + n + (n === 1 ? ' move' : ' moves'); } }
+  renderNav();
   const coach = $('#coach');
   coach.classList.toggle('hinting', !!h);
-  if (h) {
+  coach.classList.toggle('whying', !!w);
+  if (w) {
+    coach.innerHTML = '<div class="lbl">' + w.label + '</div><p>' + w.text + '</p>' + (w.btns.length ? '<div class="acts">' + w.btns.map(b => '<button class="btn sm' + (b[2] ? ' pri' : '') + '" data-act="' + b[0] + '">' + b[1] + '</button>').join('') + '</div>' : '');
+  } else if (h) {
     coach.innerHTML = '<div class="lbl">' + h.label + '</div><p>' + h.text + '</p><div class="acts"><button class="btn pri" data-act="hintnext">' + h.btn + '</button><button class="btn" data-act="hintx">Dismiss</button></div>';
   } else {
     let lbl = 'Tip', txt;
@@ -2520,8 +2865,14 @@ function render() {
     else if (sel < 0) txt = v3 ? (C3.isLocked() ? 'Rotation is locked: use the arrows to turn the cube' : 'Drag to turn the cube') + ', tap a square to select it, then choose a digit. Every ' + N + '×' + N + ' slice must hold 1 to ' + D9 + '.' : cube ? 'Select a cell, then choose a digit. Every ' + N + '×' + N + ' slice must hold 1 to ' + D9 + '.' : 'Select a cell, then choose a digit.';
     else if (G.givens[sel]) { lbl = cName(sel); txt = 'This is a given. Select an empty cell.'; }
     else if (G.notesMode) { lbl = cName(sel) + ' &middot; notes'; txt = 'Tap digits to pencil in candidates. Tap again to remove one. Hold the Notes button to cross off digits instead.'; }
-    else { lbl = cName(sel); txt = G.vals[sel] ? 'Tap the same digit again to clear it, or pick another.' : 'Choose a digit from the pad. Use Notes to mark candidates instead.'; if (v3 && C3.isLocked()) txt += ' Rotation is locked: use the arrows to turn the cube, or tap Unlock.'; if (D9 > 9 && !G.vals[sel] && noteAt(sel)) { const nl = []; for (let d = 1; d <= D9; d++) if ((noteAt(sel) >> (d - 1)) & 1) nl.push(d); txt += ' Notes here: ' + nl.join(', ') + '.'; } }
+    else { lbl = cName(sel); txt = G.vals[sel] ? 'Tap the same digit again to clear it, or pick another.' : 'Choose a digit from the pad. Use Notes to mark candidates instead.'; if (v3 && C3.isLocked()) txt += ' Rotation is locked: use the arrows to turn the cube, or tap Unlock.'; if (v3 && !C3.isInner() && N > 2 && [0, 1, 2].every(q => co(sel, q) > 0 && co(sel, q) < N - 1)) txt += ' This cell is inside the cube: tap Peel to see it.'; if (D9 > 9 && !G.vals[sel] && noteAt(sel)) { const nl = []; for (let d = 1; d <= D9; d++) if ((noteAt(sel) >> (d - 1)) & 1) nl.push(d); txt += ' Notes here: ' + nl.join(', ') + '.'; } }
     coach.innerHTML = '<div class="lbl">' + lbl + '</div><p>' + txt + '</p>';
+    if (!G.done && !G.over && !G.spent && !G.peek && !G.flash && !G.marking && !arm) {
+      let ab = '';
+      if (sel >= 0 && !G.givens[sel]) ab += '<button class="btn sm" data-act="why" aria-label="' + (G.vals[sel] ? 'Why is this cell ' + G.vals[sel] : 'Why can’t a digit go in this cell') + '">Why?</button>';
+      if (!G.branch || G.branch.stack.length < BRANCH_MAX) ab += '<button class="btn sm" data-act="branch" aria-label="Fork the board to try an idea, then commit or abandon it">' + svg(IC.branch, 16) + (G.branch ? 'Branch again' : 'Branch') + '</button>';
+      if (ab) coach.innerHTML += '<div class="acts">' + ab + '</div>';
+    }
   }
   $('#curCode').value = codeOf(G.reqLevel, G.seed, G.mode);
   alignPanel();
@@ -2581,7 +2932,7 @@ function renderStats() {
 }
 function syncSettings() {
   $('#optInstant').checked = OPT.instant; $('#optInstant').disabled = OPT.strict;
-  $('#optStrict').checked = OPT.strict; $('#optHighlight').checked = OPT.highlight; $('#optAuto').checked = OPT.autofill; $('#optUpright').checked = OPT.upright !== false; $('#optGrow').checked = OPT.grow !== false;
+  $('#optStrict').checked = OPT.strict; $('#optHighlight').checked = OPT.highlight; $('#optAuto').checked = OPT.autofill; $('#optUpright').checked = OPT.upright !== false; $('#optGrow').checked = OPT.grow !== false; $('#optNav').checked = OPT.navigator === true;
   $('#optSound').checked = OPT.sound; renderSound();
 }
 
@@ -2617,6 +2968,13 @@ const ACT = {
   resume: () => { G.paused = false; render(); },
   hintnext: () => advanceHint(),
   hintx: () => { G.hint = null; render(); },
+  why: () => startWhy(),
+  branch: () => fork(),
+  brcommit: () => branchEnd(false),
+  brabandon: () => branchEnd(true),
+  whynext: () => { if (G.why && G.why.res) { G.why.k = Math.min(G.why.k + 1, G.why.res.steps.length - 1); render(); } },
+  whyprev: () => { if (G.why && G.why.res) { G.why.k = Math.max(G.why.k - 1, 0); render(); } },
+  whyx: () => { G.why = null; render(); },
   sound: () => { OPT.sound = !OPT.sound; LS.set('ninefold:opt', OPT); syncSettings(); if (OPT.sound) Snd.play('good'); },
   mode: a => { newMode = a; renderNewSheet(); },
   level: a => startNew(+a, null, newMode),
@@ -2733,8 +3091,33 @@ const pickCell = e => {
   if (G.view !== 'cube3d' || !isCube(G.mode)) $('#board').focus({ preventScroll: true });
   save();
 };
+$('#nav').addEventListener('click', e => {
+  if (!G) return;
+  const x = e.target.closest('[data-nav]');
+  if (x) { OPT.navOpen = x.dataset.nav === 'open'; LS.set('ninefold:opt', OPT); render(); return; }
+  const c = e.target.closest('[data-i]');
+  if (!c || G.paused) return;
+  G.sel = +c.dataset.i;
+  render(); save();
+});
 $('#board').addEventListener('pointerdown', pickCell);
 $('#c3in').addEventListener('pointerdown', pickCell);
+/* Why?: press and hold a cell (or right-click it) */
+let whyT = 0, whyAt = null;
+const whyStop = () => { clearTimeout(whyT); whyT = 0; };
+const whyArm = e => {
+  const c = e.target.closest('[data-i]');
+  whyStop();
+  if (!c || !G || G.paused || (OPT.digitFirst && G.armed) || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  const i = +c.dataset.i; whyAt = { x: e.clientX, y: e.clientY };
+  whyT = setTimeout(() => { whyT = 0; startWhy(i); }, 520);
+};
+for (const el of [$('#board'), $('#c3in')]) {
+  el.addEventListener('pointerdown', whyArm);
+  el.addEventListener('pointermove', e => { if (whyT && whyAt && Math.hypot(e.clientX - whyAt.x, e.clientY - whyAt.y) > 10) whyStop(); });
+  for (const t of ['pointerup', 'pointercancel', 'pointerleave']) el.addEventListener(t, whyStop);
+  el.addEventListener('contextmenu', e => { const c = e.target.closest('[data-i]'); if (!c || !G) return; e.preventDefault(); whyStop(); startWhy(+c.dataset.i); });
+}
 /* Digits above 9 are typed as two keys: 1 then 0 to 6 gives 10 to 16. A lone 1 is entered after a short pause. */
 let digBuf = '', digT = 0;
 function typeDigit(ch) {
@@ -2754,6 +3137,7 @@ function typeDigit(ch) {
 }
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && sheetOpen()) { closeSheets(); return; }
+  if (e.key === 'Escape' && G && G.why) { G.why = null; render(); return; }
   if (e.key === 'Escape' && G && G.armed) { G.armed = 0; render(); return; }
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'textarea') { if (e.key === 'Enter' && e.target.id === 'codeIn') ACT.load(); return; }
@@ -2793,6 +3177,8 @@ document.addEventListener('keydown', e => {
   else if (k === 'k' || k === 'K') ACT.tool('mark');
   else if (k === 'f' || k === 'F') startPeek(e.shiftKey);
   else if (k === 'h' || k === 'H') doHint();
+  else if (k === 'w' || k === 'W') startWhy();
+  else if (k === 'b' || k === 'B') fork();
   else if (k === 'z' || k === 'Z') undo();
   else if (k === 'y' || k === 'Y') redo();
   else if (k === 'm' || k === 'M') ACT.sound();
@@ -2805,6 +3191,7 @@ function bindOpt(id, key, after) {
 bindOpt('#optInstant', 'instant');
 bindOpt('#optUpright', 'upright', () => render());
 bindOpt('#optGrow', 'grow', () => render());
+bindOpt('#optNav', 'navigator', () => { if (OPT.navigator) OPT.navOpen = true; render(); });
 bindOpt('#optStrict', 'strict', () => { if (OPT.strict) OPT.instant = true; });
 bindOpt('#optHighlight', 'highlight');
 bindOpt('#optSound', 'sound', () => { if (OPT.sound) Snd.play('good'); });
@@ -2831,7 +3218,7 @@ document.addEventListener('visibilitychange', () => { lastTick = performance.now
 function start(data) {
   buildStatic();
   let ok = false;
-  if (data && (data.v === 1 || data.v === 2)) ok = restore(data);
+  if (data && (data.v === 1 || data.v === 2 || data.v === 3)) ok = restore(data);
   if (!ok) { const s = LS.get('ninefold:save'); if (s) ok = restore(s); }
   if (ok) render(); else startNew(1, null, 'classic');
   if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(serialize);
