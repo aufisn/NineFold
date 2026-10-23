@@ -625,7 +625,7 @@ summary span { font-weight: 400; color: var(--ink-2); font-size: 12px; margin-le
     <div class="levels" id="levelList"></div>
     <div class="codebox">
       <label for="codeIn">Load a puzzle by code</label>
-      <div class="row"><input type="text" id="codeIn" placeholder="e.g. M-3KX9A2" autocomplete="off" spellcheck="false" maxlength="12"><button class="btn" data-act="load">Load</button></div>
+      <div class="row"><input type="text" id="codeIn" placeholder="e.g. M-3KX9A2" autocomplete="off" spellcheck="false" maxlength="16"><button class="btn" data-act="load">Load</button></div>
       <div class="tip" id="codeTip" role="status"></div>
       <label for="curCode">This puzzle's code</label>
       <div class="row"><input type="text" id="curCode" readonly><button class="btn" data-act="copy" id="copyBtn">Copy</button></div>
@@ -1255,12 +1255,15 @@ function grade(grid, geo) {
 }
 
 /* Remove clues in point-symmetric pairs, keeping the solution unique, grading as we go. */
-function carve(sol, rng, cfg, geo) {
+function carve(sol, rng, cfg, geo, bias) {
   geo = geo || GEO2;
   const n = geo.n, g = Int8Array.from(sol);
   let clues = n, lastTier = 0;
   const order = shuffle(Array.from({ length: (n + 1) >> 1 }, (_, k) => k), rng);
-  const target = cfg.lo + ((rng() * (cfg.hi - cfg.lo + 1)) | 0);
+  /* bias in [-1, 1] slides where the target lands inside the level's own clue band (positive = fewer clues). It never touches
+     cfg.tier, and a missing or zero bias draws exactly the target it always did, so seeded puzzles stay reproducible. */
+  const u = rng(), pos = bias > 0 ? u * (1 - bias) : bias < 0 ? u + (1 - u) * -bias : u;
+  const target = cfg.lo + ((pos * (cfg.hi - cfg.lo + 1)) | 0);
   for (const i of order) {
     const j = n - 1 - i, cnt = i === j ? 1 : 2;
     if (clues - cnt < cfg.min) continue;
@@ -1279,7 +1282,7 @@ function carve(sol, rng, cfg, geo) {
   return { fail: true, grid: Int8Array.from(g), clues, tier: lastTier };
 }
 
-function generate(levelIdx, seed, mode) {
+function generate(levelIdx, seed, mode, bias) {
   mode = GAMES[mode] ? mode : 'classic';
   const lv = GAMES[mode].levels, geo = GAMES[mode].geo;
   const cfg = lv[levelIdx], rng = mulberry32(seed);
@@ -1287,7 +1290,7 @@ function generate(levelIdx, seed, mode) {
   for (let a = 0; a < 600; a++) {
     attempts++;
     const sol = geo.random(rng);
-    const r = carve(sol, rng, cfg, geo);
+    const r = carve(sol, rng, cfg, geo, bias);
     if (!r.fail) return { givens: r.grid, sol, level: levelIdx, tier: r.tier, attempts, mode };
     const dist = Math.abs(r.tier - cfg.tier);
     if (!fb || dist < fb.dist) {
@@ -1414,18 +1417,21 @@ function explainElim(vals, i, d, geo) {
   return best || { ok: false, reason: 'possible' };
 }
 
-function codeOf(level, seed, mode) {
+/* A puzzle made with the silent adaptive bias (step -2..2, half-units) carries a short suffix so its code rebuilds the same board. */
+const BIAS_SUF = { '-2': '1', '-1': '2', '1': '3', '2': '4' };
+function codeOf(level, seed, mode, step) {
   const g = GAMES[mode] || GAMES.classic;
-  return g.prefix + g.levels[level].letter + '-' + seed.toString(36).toUpperCase();
+  return g.prefix + g.levels[level].letter + '-' + seed.toString(36).toUpperCase() + (BIAS_SUF[step] ? '.' + BIAS_SUF[step] : '');
 }
 function parseCode(s) {
-  const m = /^\s*(3D|4D)?\s*-?\s*([BEMHX])\s*-?\s*([0-9A-Z]{1,8})\s*$/i.exec(s || '');
+  const m = /^\s*(3D|4D)?\s*-?\s*([BEMHX])\s*-?\s*([0-9A-Z]{1,8})(?:\s*\.\s*([1-4]))?\s*$/i.exec(s || '');
   if (!m) return null;
   const mode = m[1] ? (m[1].toUpperCase() === '4D' ? 'cube4' : 'cube') : 'classic';
   const lv = GAMES[mode].levels;
   const level = lv.findIndex(l => l.letter === m[2].toUpperCase());
   const seed = parseInt(m[3], 36) >>> 0;
-  return level < 0 || isNaN(seed) ? null : { mode, level, seed };
+  const step = m[4] ? { 1: -2, 2: -1, 3: 1, 4: 2 }[m[4]] : 0;
+  return level < 0 || isNaN(seed) ? null : { mode, level, seed, step };
 }
 /*ENGINE_END*/
 
@@ -2198,19 +2204,41 @@ function cubePos(a, i) {
 }
 const COLAX = [1, 0, 0], ROWAX = [2, 2, 1];
 
-const blankStats = () => ({ played: [0, 0, 0, 0, 0], won: [0, 0, 0, 0, 0], best: [null, null, null, null, null], total: [0, 0, 0, 0, 0] });
+const blankStats = () => ({ played: [0, 0, 0, 0, 0], won: [0, 0, 0, 0, 0], best: [null, null, null, null, null], total: [0, 0, 0, 0, 0], hints: [0, 0, 0, 0, 0], mistakes: [0, 0, 0, 0, 0], tracked: [0, 0, 0, 0, 0], recent: [[], [], [], [], []] });
 let OPT = Object.assign({ instant: true, strict: false, highlight: true, autofill: true, sound: true, view: 'cube3d', upright: true, digitFirst: false, navigator: false, navOpen: true }, LS.get('ninefold:opt') || {});
 const VIEWS = ['cube3d', 'flat', 'stack'];
 if (!VIEWS.includes(OPT.view)) OPT.view = 'cube3d';
 let ST = LS.get('ninefold:stats');
 if (ST && Array.isArray(ST.played)) ST = { classic: ST };
 const okStat = s => s && Array.isArray(s.played) && s.played.length === 5;
-ST = { classic: okStat(ST && ST.classic) ? ST.classic : blankStats(), cube: okStat(ST && ST.cube) ? ST.cube : blankStats(), cube4: okStat(ST && ST.cube4) ? ST.cube4 : blankStats() };
+/* Stats saved before V39 lack the adaptive fields; fill them in without touching the old ones. */
+const fixStat = s => { const b = blankStats(); for (const k of ['hints', 'mistakes', 'tracked', 'recent']) if (!Array.isArray(s[k]) || s[k].length !== 5) s[k] = b[k]; return s; };
+ST = { classic: okStat(ST && ST.classic) ? fixStat(ST.classic) : blankStats(), cube: okStat(ST && ST.cube) ? fixStat(ST.cube) : blankStats(), cube4: okStat(ST && ST.cube4) ? fixStat(ST.cube4) : blankStats() };
+
+/* Silent adaptive difficulty. A proficiency score in [-1, 1] per (mode, level) from three terms: win rate over the last RECENT_N
+   outcomes, average solve time against a par worked out from the level tables (cells to fill x seconds per cell by tier), and
+   hints plus mistakes per solved game. Under 3 solves it is 0. Only a fresh random puzzle uses it (see startNew). */
+const RECENT_N = 8, AWAY_MS = 4 * 3600 * 1000;
+function adaptScore(mode, level) {
+  const S = ST[mode], g = GAMES[mode], cfg = g && g.levels[level];
+  if (!S || !cfg || S.won[level] < 3) return 0;
+  const clamp = x => Math.max(-1, Math.min(1, x));
+  const rc = S.recent[level];
+  const winT = rc.length ? 2 * rc.reduce((a, b) => a + b, 0) / rc.length - 1 : 0;
+  const par = (g.geo.n - (cfg.lo + cfg.hi) / 2) * (4 + 3 * cfg.tier);
+  const avg = S.total[level] / S.won[level];
+  const timeT = avg > 0 ? clamp(Math.log2(par / avg)) : 0;
+  const errT = S.tracked[level] > 0 ? clamp(1 - (S.hints[level] + S.mistakes[level]) / S.tracked[level]) : 0;
+  return clamp(0.3 * winT + 0.4 * timeT + 0.3 * errT);
+}
+const adaptStep = (mode, level) => Math.round(adaptScore(mode, level) * 2);
+function logOutcome(mode, level, won) { const r = ST[mode].recent[level]; r.push(won ? 1 : 0); if (r.length > RECENT_N) r.shift(); }
+
 let G = null, newMode = 'classic', flashTimer = null, spentT = 0;
 
 function serialize() {
   if (!G) return {};
-  return { v: 3, branch: G.branch ? { stack: G.branch.stack.map(b => ({ vals: Array.from(b.vals), notes: Array.from(b.notes) })) } : null, mode: G.mode, axis: G.axis, view: G.view, level: G.level, reqLevel: G.reqLevel, seed: G.seed, givens: Array.from(G.givens), sol: Array.from(G.sol), vals: Array.from(G.vals), notes: Array.from(G.notes), mistakes: G.mistakes, hints: G.hints, elapsed: G.elapsed, notesMode: G.notesMode, done: G.done, over: G.over, sel: G.sel, fills: G.fills };
+  return { v: 4, lastSavedAt: Date.now(), lastFocus: focusNow(), bias: G.bias || 0, branch: G.branch ? { stack: G.branch.stack.map(b => ({ vals: Array.from(b.vals), notes: Array.from(b.notes) })) } : null, mode: G.mode, axis: G.axis, view: G.view, level: G.level, reqLevel: G.reqLevel, seed: G.seed, givens: Array.from(G.givens), sol: Array.from(G.sol), vals: Array.from(G.vals), notes: Array.from(G.notes), mistakes: G.mistakes, hints: G.hints, elapsed: G.elapsed, notesMode: G.notesMode, done: G.done, over: G.over, sel: G.sel, fills: G.fills };
 }
 function save() { if (G) LS.set('ninefold:save', serialize()); }
 function install(p) {
@@ -2221,7 +2249,7 @@ function install(p) {
     givens: Int8Array.from(p.givens), sol: Int8Array.from(p.sol), vals: Int8Array.from(p.vals || p.givens),
     notes: p.notes ? Int32Array.from(p.notes) : new Int32Array(MODES[mode].n),
     sel: typeof p.sel === 'number' ? p.sel : -1, notesMode: !!p.notesMode, mistakes: p.mistakes || 0, hints: p.hints || 0,
-    elapsed: p.elapsed || 0, undo: [], redo: [], done: !!p.done, over: !!p.over, paused: false, hint: null, flash: null, peek: null, peekCand: null, branch: null
+    elapsed: p.elapsed || 0, bias: [-2, -1, 1, 2].includes(p.bias) ? p.bias : 0, welcome: null, undo: [], redo: [], done: !!p.done, over: !!p.over, paused: false, hint: null, flash: null, peek: null, peekCand: null, branch: null
   };
   { const n = MODES[mode].n, st = p.branch && Array.isArray(p.branch.stack) ? p.branch.stack : [];
     if (st.length && st.length <= BRANCH_MAX && st.every(b => b && b.vals && b.notes && b.vals.length === n && b.notes.length === n))
@@ -2230,14 +2258,39 @@ function install(p) {
   G.fills = typeof p.fills === 'number' ? p.fills : MODES[mode].levels[p.level].fills;
   if (typeof p.sel !== 'number' && !(isCube(mode) && G.view === 'cube3d')) G.sel = G.givens.findIndex(v => !v);
 }
+/* Session memory: where the player was working, as a unit index (classic 0-26, cube axis*N + slice). Taken from the selected empty
+   cell, else the cell touched last. Classic picks whichever of its row, column and box has the fewest empty cells. Board state only. */
+function focusNow() {
+  if (!G) return null;
+  let i = G.sel;
+  if (!(i >= 0 && !G.givens[i] && !G.vals[i])) {
+    const ch = G.undo[G.undo.length - 1];
+    i = ch && ch.length ? ch[ch.length - 1].i : -1;
+  }
+  if (i < 0) return null;
+  if (isCube(G.mode)) return G.axis * M().N + co(i, G.axis);
+  let best = -1, bn = 99;
+  for (const u of [ROW[i], 9 + COL[i], 18 + BOX[i]]) { const e = UNITS[u].filter(j => !G.vals[j]).length; if (e < bn) { bn = e; best = u; } }
+  return best;
+}
+function greeting(d) {
+  if (d.v !== 4 || typeof d.lastSavedAt !== 'number' || Date.now() - d.lastSavedAt < AWAY_MS || G.done || G.over) return null;
+  const left = G.vals.reduce((a, v) => a + (v ? 0 : 1), 0);
+  if (!left) return null;
+  const units = isCube(G.mode) ? 3 * M().N : 27, f = d.lastFocus;
+  return 'Welcome back — ' + left + (left === 1 ? ' cell' : ' cells') + ' left, ' + fmt(G.elapsed) + ' on the clock.' +
+    (Number.isInteger(f) && f >= 0 && f < units ? ' You were last working in ' + uName(f) + '.' : '');
+}
 function restore(d) {
   try {
-    if (!d || (d.v !== 1 && d.v !== 2 && d.v !== 3)) return false;
+    if (!d || ![1, 2, 3, 4].includes(d.v)) return false;
     const mode = d.mode || 'classic';
     if (!MODES[mode]) return false;
     const n = MODES[mode].n;
     if (d.givens.length !== n || d.sol.length !== n || d.vals.length !== n || d.notes.length !== n) return false;
     install(Object.assign({}, d, { mode }));
+    G.welcome = greeting(d);
+    if (G.welcome) save();
     return true;
   } catch (e) { return false; }
 }
@@ -2451,6 +2504,7 @@ function afterChange() {
 function finish() {
   const L = G.level, S = ST[G.mode], lv = M().levels;
   S.won[L]++; S.total[L] += G.elapsed;
+  S.hints[L] += G.hints; S.mistakes[L] += G.mistakes; S.tracked[L]++; logOutcome(G.mode, L, true);
   const prev = S.best[L];
   const isBest = prev === null || G.elapsed < prev;
   if (isBest) S.best[L] = G.elapsed;
@@ -2860,6 +2914,7 @@ function render() {
     let lbl = 'Tip', txt;
     if (G.done) { lbl = 'Solved'; txt = cube ? 'Every slice holds 1 to ' + D9 + '. Start another puzzle when you are ready.' : 'Every row, column and box is complete. Start another puzzle when you are ready.'; }
     else if (G.over) { lbl = 'Game over'; txt = 'Three mistakes ends a strict game. Restart the puzzle or begin a new one.'; }
+    else if (G.welcome) txt = G.welcome;
     else if (G.spent) { lbl = 'Digit ' + G.spent + ' is used up'; txt = 'All ' + M().cap + ' copies of ' + G.spent + ' are already on the board, including any placed wrongly. Erase one first if you want to move it.'; }
     else if (G.peek) { lbl = 'Fill notes'; txt = 'Every legal candidate is showing. They hide again in ' + Math.round(G.peek.ms / 1000) + ' seconds, so look now. ' + G.fills + (G.fills === 1 ? ' use' : ' uses') + ' left on this puzzle.'; }
     else if (G.flash) { lbl = 'Auto-fill'; txt = 'Filled the last empty cell' + (G.flash.length > 1 ? 's' : '') + ': ' + G.flash.map(cName).join(', ') + '. Undo reverses it.'; }
@@ -2878,7 +2933,7 @@ function render() {
       if (ab) coach.innerHTML += '<div class="acts">' + ab + '</div>';
     }
   }
-  $('#curCode').value = codeOf(G.reqLevel, G.seed, G.mode);
+  $('#curCode').value = codeOf(G.reqLevel, G.seed, G.mode, G.bias);
   alignPanel();
 }
 /* Unfolded layout: the tool column starts level with the top edge of the game frame, not with the rows above it */
@@ -2911,7 +2966,7 @@ function openSheet(name) {
   document.querySelectorAll('.sheet').forEach(s => { s.hidden = true; });
   if (name === 'stats') renderStats();
   if (name === 'settings') syncSettings();
-  if (name === 'new') { newMode = G ? G.mode : 'classic'; renderNewSheet(); $('#codeTip').textContent = ''; $('#curCode').value = G ? codeOf(G.reqLevel, G.seed, G.mode) : ''; }
+  if (name === 'new') { newMode = G ? G.mode : 'classic'; renderNewSheet(); $('#codeTip').textContent = ''; $('#curCode').value = G ? codeOf(G.reqLevel, G.seed, G.mode, G.bias) : ''; }
   if (name === 'net') NV.show();
   $('#sheet-' + name).hidden = false;
   $('#scrim').hidden = false;
@@ -2941,14 +2996,17 @@ function syncSettings() {
 }
 
 /* Starting games */
-function startNew(level, seed, mode) {
+function startNew(level, seed, mode, step) {
   mode = mode || 'classic';
   closeSheets();
+  if (G && !G.done && !G.over && G.elapsed >= 60) logOutcome(G.mode, G.level, false);
   $('#loading').hidden = false;
   setTimeout(function () {
     const s = seed == null ? (Math.random() * 4294967296) >>> 0 : seed;
-    const p = generate(level, s, mode);
-    install({ mode, level: p.level, reqLevel: level, seed: s, givens: p.givens, sol: p.sol });
+    /* Adaptation applies to fresh random puzzles only; a code or share link always rebuilds the same board. */
+    const st = seed == null ? adaptStep(mode, level) : step || 0;
+    const p = generate(level, s, mode, st / 2);
+    install({ mode, level: p.level, reqLevel: level, seed: s, givens: p.givens, sol: p.sol, bias: st });
     autoFillPass([], null);
     ST[mode].played[G.level]++; saveStats();
     $('#loading').hidden = true;
@@ -2957,7 +3015,7 @@ function startNew(level, seed, mode) {
 }
 function restartPuzzle() {
   if (!G) return;
-  install({ mode: G.mode, axis: G.axis, view: G.view, level: G.level, reqLevel: G.reqLevel, seed: G.seed, givens: G.givens, sol: G.sol });
+  install({ mode: G.mode, axis: G.axis, view: G.view, level: G.level, reqLevel: G.reqLevel, seed: G.seed, givens: G.givens, sol: G.sol, bias: G.bias });
   autoFillPass([], null);
   closeSheets(); save();
 }
@@ -2994,7 +3052,7 @@ const ACT = {
   load: () => {
     const p = parseCode($('#codeIn').value);
     if (!p) { $('#codeTip').textContent = 'That code is not valid. It looks like M-3KX9A2 or 3D-M-3KX9A2.'; return; }
-    startNew(p.level, p.seed, p.mode);
+    startNew(p.level, p.seed, p.mode, p.step);
   },
   copy: () => {
     const inp = $('#curCode'), btn = $('#copyBtn');
@@ -3217,12 +3275,13 @@ setInterval(() => {
     if (++ticks % 20 === 0) save();
   }
 }, 500);
+['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, () => { if (G && G.welcome) G.welcome = null; }, true));
 document.addEventListener('visibilitychange', () => { lastTick = performance.now(); if (document.visibilityState === 'hidden') save(); });
 
 function start(data) {
   buildStatic();
   let ok = false;
-  if (data && (data.v === 1 || data.v === 2 || data.v === 3)) ok = restore(data);
+  if (data && [1, 2, 3, 4].includes(data.v)) ok = restore(data);
   if (!ok) { const s = LS.get('ninefold:save'); if (s) ok = restore(s); }
   if (ok) render(); else startNew(1, null, 'classic');
   if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(serialize);
